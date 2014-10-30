@@ -1,3 +1,5 @@
+let debug = false
+
 type cvariance = Covariant | Contravariant | Invariant
 and  cname    = string
 and  cfield   = Field of ctype * cname
@@ -34,6 +36,7 @@ let rec inherits (c:vclass) (d:vclass) : vclass option =
     | Class _ , Top -> failwith "[<::] tricky case, CLS <:: TOP. idk"
     | Class c', Class d' when c'.cls.name = d'.cls.name -> None
     | Class c', Class d' ->
+       let () = if debug then Format.printf "[inherit] checking '%s' <:: '%s'\n" c'.cls.name d'.cls.name in
        begin
          match c'.cls.extends with
          | Top -> None (* c extends Top *)
@@ -52,12 +55,15 @@ let inherits_eq (c:vclass) (d:vclass) : vclass option =
     | _, _ -> inherits c d
   end
 
-let subst (hole:vclass) (tau_i':vclass) (tau_o':vclass) : vclass =
+let rec subst (hole:vclass) (tau_i':vclass) (tau_o':vclass) : vclass =
   begin
     match hole with
     | Top -> Top
     | Bot -> Bot
-    | Class cr -> Class {cls=cr.cls; tau_i=tau_i'; tau_o=tau_o'}
+    | Class cr -> Class {cls = cr.cls
+                        ; tau_i = (subst cr.tau_i tau_o' tau_i')
+                        ; tau_o = (subst cr.tau_o tau_i' tau_o')
+                        }
   end
 
 let rec subtype (c:vclass) (d:vclass) : bool =
@@ -66,6 +72,7 @@ let rec subtype (c:vclass) (d:vclass) : bool =
     | Bot, _ -> true
     | _, Top -> true
     | Class c', Class d' ->
+       let () = if debug then Format.printf "[subtype] checking '%s' <: '%s'\n" c'.cls.name d'.cls.name in
        let c_inhr = inherits_eq c d in
        (* if c_opt is none, return false *)
        begin
