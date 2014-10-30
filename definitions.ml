@@ -5,8 +5,8 @@ type  cname    = string
 and  cfield   = Field of ctype * cname
 and  carg     = Arg   of ctype * cname
 and  cmethod  = Method of ctype * cname * carg list * cstmt
-and  cstmt    = Return of cexpr (* Seq of stmt list | Assign of  *)
-and  cexpr    = Var of cname | New of class_record
+and  cstmt    = Return of cexpr(* Seq of stmt list | Assign of  *)
+and  cexpr    = Var of cname | New of class_record | Null
 and  ctype    = TVar of string | CType of vclass
 and  class_sig = { name : cname
                 ; param : cname
@@ -39,7 +39,7 @@ let rec context_add k tau_i tau_o ctx =
   | (k',t',t'') :: tl ->
      let rst = context_add k tau_i tau_o tl in
      if k = k'
-     then failwith "[context_add] DUPLICATE KEY"
+     then failwith (Format.sprintf "[context_add] DUPLICATE KEY '%s'" k)
      else (k',t',t'') :: rst
 let rec context_mem k ctx =
   match ctx with
@@ -91,6 +91,10 @@ let collect_extends_methods (c:vclass) : MethodSet.t =
 
 (*** misc ***)
 let and_all xs = List.fold_left (fun acc x -> acc && x) true  xs
+let record_of_vclass_exn (c:vclass) : class_record =
+  match c with
+  | Top | Bot -> failwith "record_of_vclass_exn"
+  | Class cr  -> cr
 (* let or_all  f xs = List.fold_left (fun acc x -> acc || f x) false xs *)
 
 (*** inheritance + subtyping ***)

@@ -2,7 +2,7 @@ definitions:
 	ocamlc definitions.ml
 
 test:
-	ocamlc definitions.ml classes.ml classok_test.ml
+	ocamlc definitions.ml classes.ml wellformed_test.ml
 	./a.out
 	ocamlc definitions.ml classes.ml subtype_test.ml
 	./a.out

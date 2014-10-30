@@ -123,7 +123,69 @@ let c_integer_array = Class { cls = { name = "Array"
                             ; tau_o = c_integer
                             }
 
-let all_classes = [
+let c_boolean = Class { cls = { name = "Boolean"
+                                  ; param = "BOOL_PARAM"
+                                  ; extends = Top
+                                  ; fields = []
+                                  ; methods = [
+                                    Method(CType Top
+                                          , "negate"
+                                          , []
+                                          , Return Null)
+                                  ; Method(CType Top
+                                          , "and"
+                                          , [Arg (CType Bot, "that")]
+                                          , Return Null)
+                                  ]}
+                          ; tau_i = Bot
+                          ; tau_o = Top
+                          }
+
+(* extend something that has methods *)
+let c_boolean2 = Class { cls = { name = "Boolean2"
+                               ; param = "BOOL2_PARAM"
+                               ; extends = c_boolean
+                               ; fields = [Field (CType c_boolean, "bool2_field")]
+                               ; methods = []
+                               }
+                       ; tau_i = Bot
+                       ; tau_o = Top
+                       }
+
+(* extend something that has methods, add your own new method *)
+let c_boolean3 = Class { cls = { name = "Boolean3"
+                               ; param = "BOOL3_PARAM"
+                               ; extends = c_boolean
+                               ; fields = []
+                               ; methods = [
+                                 Method(CType Bot
+                                        , "or"
+                                        , [Arg (CType c_boolean, "that")]
+                                        , Return Null)
+                               ]}
+                       ; tau_i = Bot
+                       ; tau_o = Top
+                       }
+
+let c_boolean4 = Class { cls = { name = "Boolean4"
+                               ; param = "BOOL4_PARAM"
+                               ; extends = c_boolean
+                               ; fields = [Field (CType c_boolean, "bool4_field")]
+                               ; methods = [
+                                 Method(CType c_boolean
+                                       , "negate"
+                                       , []
+                                       , Return Null)
+                               ; Method(CType c_boolean
+                                       , "and"
+                                       , [Arg (CType c_boolean, "that")]
+                                       , Return Null)
+                               ]}
+                       ; tau_i = Bot
+                       ; tau_o = Top
+                       }
+
+let wellformed_classes = [
   c_number
   ; c_integer
   ; c_float
@@ -140,4 +202,10 @@ let all_classes = [
   ; c_bot_list
   ; c_number_array
   ; c_integer_array
+  ; c_boolean
+  ; c_boolean2
+  ; c_boolean3
+  ; c_boolean4
 ]
+
+let malformed_classes = []
