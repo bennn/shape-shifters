@@ -160,7 +160,3 @@ let rec subtype (c:vclass) (d:vclass) : bool =
         end
     | _, _ -> false
   end
-
-let class_ok (c:vclass) : bool =
-  (* needs context? *)
-  failwith ""
