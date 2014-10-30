@@ -1,7 +1,6 @@
 let debug = false
 
-type cvariance = Covariant | Contravariant | Invariant
-and  cname    = string
+type  cname    = string
 and  cfield   = Field of ctype * cname
 and  carg     = Arg   of ctype * cname
 and  cmethod  = Method of ctype * cname * carg list * cstmt * ctype
@@ -10,7 +9,6 @@ and  cexpr    = Var of cname | New of class_record
 and  ctype    = TVar of string | TClass of class_sig
 and  class_sig = { name : cname
                 ; param : ctype
-                ; variance : cvariance
                 ; extends : vclass
                 (* ; implements : cinterface *)
                 (* ; satisfies : cshape *)
