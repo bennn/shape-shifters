@@ -6,7 +6,7 @@ and  carg     = Arg   of ctype * cname
 and  cmethod  = Method of ctype * cname * carg list * cstmt * ctype
 and  cstmt    = Return of cexpr (* Seq of stmt list | Assign of  *)
 and  cexpr    = Var of cname | New of class_record
-and  ctype    = TVar of string | TClass of class_sig
+and  ctype    = TVar of string
 and  class_sig = { name : cname
                 ; param : ctype
                 ; extends : vclass
@@ -21,6 +21,20 @@ and class_record  = { cls   : class_sig
                     ; tau_o : vclass
                     }
 and vclass = Class of class_record | Top | Bot
+
+(* type context = (string * TODO *)
+(* let empty_context = *)
+
+(* let rec class_ok_aux (ctx:context) (c:vclass) : bool = *)
+(*   begin *)
+(*     match c with *)
+(*     | Top | Bot -> true *)
+(*     | Class c' -> *)
+(*        (\* tau_i tau_o bound to c'.cls.param *\) *)
+(*   end *)
+
+(* let class_ok (c:vclass) : bool = *)
+(*   class_ok_aux empty_context c *)
 
 (* record-only version would avoid some checks *)
 let rec inherits (c:vclass) (d:vclass) : vclass option =
