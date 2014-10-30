@@ -3,13 +3,13 @@ open Classes
 
 let test x = assert x
 
-let () = print_endline "******* Testing the basics *******"
+let () = print_endline "******* Testing subtyping *******"
 let test_bot_bot = test (subtype Bot Bot)
 let test_bot_top = test (subtype Bot Top)
 let test_top_top = test (subtype Top Top)
 let test_top_bot = test (not (subtype Top Bot))
 
-let () = print_endline "******* Testing un-parameterized classes *******"
+(* let () = print_endline "******* Testing un-parameterized classes *******" *)
 let test_num_num = test (subtype c_number c_number)
 let test_int_num = test (subtype c_integer c_number)
 let test_num_int = test (not (subtype c_number c_integer))
@@ -23,7 +23,7 @@ let test_b_a     = test (subtype c_b c_a)
 let test_d_c     = test (subtype c_d c_c)
 let test_c_d     = test (not (subtype c_c c_d))
 
-let () = print_endline "******* Testing parameterized classes *******"
+(* let () = print_endline "******* Testing parameterized classes *******" *)
 let test_strlist_strlist = test (subtype c_string_list c_string_list)
 let test_intlist_strlist = test (not (subtype c_string_list c_integer_list))
 let test_numlist_strlist = test (not (subtype c_string_list c_integer_list))

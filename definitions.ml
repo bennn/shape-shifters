@@ -53,44 +53,6 @@ let rec context_flip ctx =
 let and_all f xs = List.fold_left (fun acc x -> acc && f x) true  xs
 let or_all  f xs = List.fold_left (fun acc x -> acc || f x) false xs
 
-(*** well-formedness ***)
-(* trivial now, may want to check uniqueness later *)
-let param_ok (ctx:context) (c:class_record) : bool =
-  true
-let rec class_ok_aux (ctx:context) (c:vclass) : bool =
-  begin
-    match c with
-    | Top | Bot -> true
-    | Class c' ->
-       (* bind param to tau_i tau_o *)
-       let ctx' = context_add (c'.cls.param) (CType c'.tau_i) (CType c'.tau_o) ctx in
-       let p_ok = param_ok ctx' c' in
-       let e_ok = class_ok_aux ctx' (c'.cls.extends) in
-       let f_ok = and_all (field_ok ctx') (c'.cls.fields) in
-       let m_ok = and_all (method_ok ctx') (c'.cls.methods) in
-       and_all (fun x -> x) [p_ok; e_ok; f_ok; m_ok]
-  end
-and arg_ok (ctx:context) (a:carg) : bool =
-  match a with | Arg (t, name) -> type_ok ctx t
-and body_ok (ctx:context) (b:cstmt) : bool =
-  true (* TODO want to allow implementations, eventually *)
-and field_ok (ctx:context) (f:cfield) : bool =
-  match f with | Field (t, name) -> type_ok ctx t
-and method_ok (ctx:context) (m:cmethod) : bool =
-  match m with
-  | Method (ret_type, name, args, body) ->
-     let r_ok   = type_ok ctx ret_type in
-     let rgs_ok = and_all (arg_ok (context_flip ctx)) args in
-     let b_ok   = body_ok ctx body in
-     and_all (fun x -> x) [r_ok; rgs_ok; b_ok]
-and type_ok (ctx:context) (t:ctype) : bool =
-  match t with
-  | TVar str -> context_mem str ctx
-  | CType c -> class_ok_aux ctx c
-
-let class_ok (c:vclass) : bool =
-  class_ok_aux empty_context c
-
 (*** inheritance + subtyping ***)
 (* record-only version would avoid some checks *)
 let rec inherits (c:vclass) (d:vclass) : vclass option =
@@ -133,7 +95,6 @@ let rec subst (hole:vclass) (tau_i':vclass) (tau_o':vclass) : vclass =
                         ; tau_o = (subst cr.tau_o tau_i' tau_o')
                         }
   end
-
 let rec subtype (c:vclass) (d:vclass) : bool =
   begin
     match c, d with
@@ -160,3 +121,67 @@ let rec subtype (c:vclass) (d:vclass) : bool =
         end
     | _, _ -> false
   end
+
+let subt_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
+  failwith "not enough money for this"
+
+(*** collections ***)
+module MethodSet = Set.Make (struct
+  type t = cmethod
+  let compare (Method (_,n1,_,_)) (Method (_,n2,_,_)) = Pervasives.compare n1 n2
+end)
+(* Build a set of current & super methods -- these are what the current class might possibly override *)
+let rec collect_extends_methods_aux (acc:MethodSet.t) (c:vclass) : MethodSet.t =
+  begin
+    match c with
+    | Top | Bot -> acc
+    | Class cr  -> collect_extends_methods_aux
+                     (MethodSet.union acc (MethodSet.of_list cr.cls.methods))
+                     cr.cls.extends
+  end
+let collect_extends_methods (c:vclass) : MethodSet.t =
+  collect_extends_methods_aux MethodSet.empty c
+
+(*** well-formedness ***)
+(* trivial now, may want to check uniqueness later *)
+let param_ok (ctx:context) (c:class_record) : bool =
+  true
+let rec class_ok_aux (ctx:context) (c:vclass) : bool =
+  begin
+    match c with
+    | Top | Bot -> true
+    | Class c' ->
+       (* bind param to tau_i tau_o *)
+       let ctx' = context_add (c'.cls.param) (CType c'.tau_i) (CType c'.tau_o) ctx in
+       let p_ok = param_ok ctx' c' in
+       let e_ok = class_ok_aux ctx' (c'.cls.extends) in
+       let f_ok = and_all (field_ok ctx') (c'.cls.fields) in
+       let m_ok = methods_ok ctx' c' in
+       and_all (fun x -> x) [p_ok; e_ok; f_ok; m_ok]
+  end
+and arg_ok (ctx:context) (a:carg) : bool =
+  match a with | Arg (t, name) -> type_ok ctx t
+and body_ok (ctx:context) (b:cstmt) : bool =
+  true (* TODO want to allow implementations, eventually *)
+and field_ok (ctx:context) (f:cfield) : bool =
+  match f with | Field (t, name) -> type_ok ctx t
+and methods_ok (ctx:context) (c:class_record) : bool =
+  let extm_set = collect_extends_methods c.cls.extends in
+  (* TODO make sure all interface methods are implemented *)
+  List.fold_left
+    (fun acc m ->
+     let Method (ret_type, name, args, body) = m in
+     acc
+     && type_ok ctx ret_type
+     && and_all (arg_ok ctx) args
+     && if MethodSet.mem m extm_set
+        then subt_method ctx m (MethodSet.find m extm_set)
+        else true
+    ) true c.cls.methods
+and type_ok (ctx:context) (t:ctype) : bool =
+  match t with
+  | TVar str -> context_mem str ctx
+  | CType c -> class_ok_aux ctx c
+
+let class_ok (c:vclass) : bool =
+  class_ok_aux empty_context c
