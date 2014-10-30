@@ -1,14 +1,15 @@
 let debug = false
 
+(*** typedefs ***)
 type  cname    = string
 and  cfield   = Field of ctype * cname
 and  carg     = Arg   of ctype * cname
-and  cmethod  = Method of ctype * cname * carg list * cstmt * ctype
+and  cmethod  = Method of ctype * cname * carg list * cstmt
 and  cstmt    = Return of cexpr (* Seq of stmt list | Assign of  *)
 and  cexpr    = Var of cname | New of class_record
-and  ctype    = TVar of string
+and  ctype    = TVar of string | CType of vclass
 and  class_sig = { name : cname
-                ; param : ctype
+                ; param : cname
                 ; extends : vclass
                 (* ; implements : cinterface *)
                 (* ; satisfies : cshape *)
@@ -22,20 +23,75 @@ and class_record  = { cls   : class_sig
                     }
 and vclass = Class of class_record | Top | Bot
 
-(* type context = (string * TODO *)
-(* let empty_context = *)
+(*** context ***)
+(* Kind Context maps type variables *)
+type kind_context = (string * ctype * ctype) list
+(* 2014-10-29 the whole context might have more parts, later *)
+type context = kind_context
+let empty_context = []
+let rec context_lookup k ctx =
+  match ctx with
+  | [] -> failwith (Format.sprintf "unbound variable '%s'" k)
+  | (k',_,tau_o)::tl -> if k = k' then tau_o else context_lookup k tl
+let rec context_add k tau_i tau_o ctx =
+  match ctx with
+  | [] -> (k, tau_i, tau_o) :: ctx
+  | (k',t',t'') :: tl ->
+     let rst = context_add k tau_i tau_o tl in
+     if k = k'
+     then failwith "[context_add] DUPLICATE KEY"
+     else (k',t',t'') :: rst
+let rec context_mem k ctx =
+  match ctx with
+  | [] -> false
+  | (k',_,_)::tl -> k = k' || context_mem k tl
+let rec context_flip ctx =
+  match ctx with
+  | [] -> []
+  | (k, tau_i, tau_o) :: tl -> (k, tau_o, tau_i) :: context_flip tl
 
-(* let rec class_ok_aux (ctx:context) (c:vclass) : bool = *)
-(*   begin *)
-(*     match c with *)
-(*     | Top | Bot -> true *)
-(*     | Class c' -> *)
-(*        (\* tau_i tau_o bound to c'.cls.param *\) *)
-(*   end *)
+let and_all f xs = List.fold_left (fun acc x -> acc && f x) true  xs
+let or_all  f xs = List.fold_left (fun acc x -> acc || f x) false xs
 
-(* let class_ok (c:vclass) : bool = *)
-(*   class_ok_aux empty_context c *)
+(*** well-formedness ***)
+(* trivial now, may want to check uniqueness later *)
+let param_ok (ctx:context) (c:class_record) : bool =
+  true
+let rec class_ok_aux (ctx:context) (c:vclass) : bool =
+  begin
+    match c with
+    | Top | Bot -> true
+    | Class c' ->
+       (* bind param to tau_i tau_o *)
+       let ctx' = context_add (c'.cls.param) (CType c'.tau_i) (CType c'.tau_o) ctx in
+       let p_ok = param_ok ctx' c' in
+       let e_ok = class_ok_aux ctx' (c'.cls.extends) in
+       let f_ok = and_all (field_ok ctx') (c'.cls.fields) in
+       let m_ok = and_all (method_ok ctx') (c'.cls.methods) in
+       and_all (fun x -> x) [p_ok; e_ok; f_ok; m_ok]
+  end
+and arg_ok (ctx:context) (a:carg) : bool =
+  match a with | Arg (t, name) -> type_ok ctx t
+and body_ok (ctx:context) (b:cstmt) : bool =
+  true (* TODO want to allow implementations, eventually *)
+and field_ok (ctx:context) (f:cfield) : bool =
+  match f with | Field (t, name) -> type_ok ctx t
+and method_ok (ctx:context) (m:cmethod) : bool =
+  match m with
+  | Method (ret_type, name, args, body) ->
+     let r_ok   = type_ok ctx ret_type in
+     let rgs_ok = and_all (arg_ok (context_flip ctx)) args in
+     let b_ok   = body_ok ctx body in
+     and_all (fun x -> x) [r_ok; rgs_ok; b_ok]
+and type_ok (ctx:context) (t:ctype) : bool =
+  match t with
+  | TVar str -> context_mem str ctx
+  | CType c -> class_ok_aux ctx c
 
+let class_ok (c:vclass) : bool =
+  class_ok_aux empty_context c
+
+(*** inheritance + subtyping ***)
 (* record-only version would avoid some checks *)
 let rec inherits (c:vclass) (d:vclass) : vclass option =
   begin
