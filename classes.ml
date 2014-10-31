@@ -3,6 +3,7 @@ open Definitions
 let c_number = Class { cls = { name = "Number"
                            ; param = "Number_Param"
                            ; extends = Top
+                           ; implements = None
                            ; fields = []
                            ; methods = []
                            }
@@ -13,6 +14,7 @@ let c_number = Class { cls = { name = "Number"
 let c_integer = Class { cls = { name = "Integer"
                            ; param = "Integer_Param"
                            ; extends = c_number
+                           ; implements = None
                            ; fields = []
                            ; methods = []
                            }
@@ -23,6 +25,7 @@ let c_integer = Class { cls = { name = "Integer"
 let c_float   = Class { cls = { name = "Float"
                            ; param = "Float_Param"
                            ; extends = c_number
+                           ; implements = None
                            ; fields = []
                            ; methods = []
                            }
@@ -33,6 +36,7 @@ let c_float   = Class { cls = { name = "Float"
 let c_string  = Class { cls = { name = "String"
                             ; param = "String_Param"
                             ; extends = Top
+                            ; implements = None
                             ; fields = []
                             ; methods = []
                             }
@@ -42,33 +46,40 @@ let c_string  = Class { cls = { name = "String"
 
 (* a few classes in linear order, to see if subtr is transitive *)
 let c_a = Class { cls = { name = "A"; param = "A_PARAM"
-                          ; extends = Top; fields = []; methods = []}
+                          ; extends = Top ; implements = None
+                          ; fields = []; methods = []}
                     ; tau_i = Bot; tau_o = Top}
 let c_b = Class { cls = { name = "B"; param = "B_PARAM"
-                          ; extends = c_a; fields = []; methods = []}
+                          ; extends = c_a; implements = None
+                          ; fields = []; methods = []}
                     ; tau_i = Bot; tau_o = Top}
 let c_c = Class { cls = { name = "C"; param = "C_PARAM"
-                          ; extends = c_b; fields = []; methods = []}
+                          ; extends = c_b; implements = None
+                          ; fields = []; methods = []}
                     ; tau_i = Bot; tau_o = Top}
 let c_d = Class { cls = { name = "D"; param = "D_PARAM"
-                          ; extends = c_c; fields = []; methods = []}
+                          ; extends = c_c; implements = None
+                          ; fields = []; methods = []}
                     ; tau_i = Bot; tau_o = Top}
 let c_e = Class { cls = { name = "E"; param = "E_PARAM"
-                          ; extends = c_d; fields = []; methods = []}
+                          ; extends = c_d; implements = None
+                          ; fields = []; methods = []}
                     ; tau_i = Bot; tau_o = Top}
 let c_string_list = Class { cls = { name = "List"
-                ; param = "List_STRING_PARAM"
-                ; extends = Top
-                ; fields = []
-                ; methods = []
-                }
-                    ; tau_i = Bot
-                    ; tau_o = c_string
-                    }
+                                  ; param = "List_STRING_PARAM"
+                                  ; extends = Top
+                                  ; implements = None
+                                  ; fields = []
+                                  ; methods = []
+                                  }
+                          ; tau_i = Bot
+                          ; tau_o = c_string
+                          }
 
 let c_number_list = Class { cls = { name = "List"
                 ; param = "List_NUMBER_PARAM"
                 ; extends = Top
+                ; implements = None
                 ; fields = []
                 ; methods = []
                 }
@@ -79,6 +90,7 @@ let c_number_list = Class { cls = { name = "List"
 let c_integer_list = Class { cls = { name = "List"
                 ; param = "List_INTEGER_PARAM"
                 ; extends = Top
+                ; implements = None
                 ; fields = []
                 ; methods = []
                 }
@@ -89,6 +101,7 @@ let c_integer_list = Class { cls = { name = "List"
 let c_top_list     = Class {cls = { name = "List"
                 ; param = "List_TOP_PARAM"
                 ; extends = Top
+                ; implements = None
                 ; fields = []
                 ; methods = []
                 }
@@ -98,6 +111,7 @@ let c_top_list     = Class {cls = { name = "List"
 let c_bot_list   = Class {cls = { name = "List"
                 ; param = "List_BOT_PARAM"
                 ; extends = Top
+                ; implements = None
                 ; fields = []
                 ; methods = []
                 }
@@ -107,6 +121,7 @@ let c_bot_list   = Class {cls = { name = "List"
 let c_number_array = Class { cls = { name = "Array"
                                    ; param = "ARRAY_NUM_PARAM"
                                    ; extends = c_number_list
+                                   ; implements = None
                                    ; fields = []
                                    ; methods = []
                                    }
@@ -116,6 +131,7 @@ let c_number_array = Class { cls = { name = "Array"
 let c_integer_array = Class { cls = { name = "Array"
                                    ; param = "ARRAY_INTEGER_PARAM"
                                    ; extends = c_integer_list
+                                   ; implements = None
                                    ; fields = []
                                    ; methods = []
                                    }
@@ -126,16 +142,15 @@ let c_integer_array = Class { cls = { name = "Array"
 let c_boolean = Class { cls = { name = "Boolean"
                                   ; param = "BOOL_PARAM"
                                   ; extends = Top
+                                  ; implements = None
                                   ; fields = []
                                   ; methods = [
                                     Method(CType Top
                                           , "negate"
-                                          , []
-                                          , Return Null)
+                                          , [])
                                   ; Method(CType Top
                                           , "and"
-                                          , [Arg (CType Bot, "that")]
-                                          , Return Null)
+                                          , [Arg (CType Bot, "that")])
                                   ]}
                           ; tau_i = Bot
                           ; tau_o = Top
@@ -145,6 +160,7 @@ let c_boolean = Class { cls = { name = "Boolean"
 let c_boolean2 = Class { cls = { name = "Boolean2"
                                ; param = "BOOL2_PARAM"
                                ; extends = c_boolean
+                               ; implements = None
                                ; fields = [Field (CType c_boolean, "bool2_field")]
                                ; methods = []
                                }
@@ -156,12 +172,12 @@ let c_boolean2 = Class { cls = { name = "Boolean2"
 let c_boolean3 = Class { cls = { name = "Boolean3"
                                ; param = "BOOL3_PARAM"
                                ; extends = c_boolean
+                               ; implements = None
                                ; fields = []
                                ; methods = [
                                  Method(CType Bot
                                         , "or"
-                                        , [Arg (CType c_boolean, "that")]
-                                        , Return Null)
+                                        , [Arg (CType c_boolean, "that")])
                                ]}
                        ; tau_i = Bot
                        ; tau_o = Top
@@ -170,20 +186,48 @@ let c_boolean3 = Class { cls = { name = "Boolean3"
 let c_boolean4 = Class { cls = { name = "Boolean4"
                                ; param = "BOOL4_PARAM"
                                ; extends = c_boolean
+                               ; implements = None
                                ; fields = [Field (CType c_boolean, "bool4_field")]
                                ; methods = [
                                  Method(CType c_boolean
                                        , "negate"
-                                       , []
-                                       , Return Null)
+                                       , [])
                                ; Method(CType c_boolean
                                        , "and"
-                                       , [Arg (CType c_boolean, "that")]
-                                       , Return Null)
+                                       , [Arg (CType c_boolean, "that")])
                                ]}
                        ; tau_i = Bot
                        ; tau_o = Top
                        }
+
+(* malformed: cannot overwrite method with a subtype arg type *)
+let c_bad_boolean5 = Class { cls = { name = "Boolean5_bad"
+                               ; param = "BOOL5_PARAM"
+                               ; extends = c_boolean4
+                               ; implements = None
+                               ; fields = []
+                               ; methods = [
+                                 Method(CType c_boolean
+                                       , "and"
+                                       , [Arg (CType Bot, "that")])
+                               ]}
+                       ; tau_i = Bot
+                       ; tau_o = Top
+                       }
+(* malformed: *)
+let c_bad_boolean6 = Class { cls = { name = "Boolean6_bad"
+                                   ; param = "BOOL6_PARAM"
+                                   ; extends = c_boolean4
+                                   ; implements = None
+                                   ; fields = []
+                                   ; methods = [
+                                     Method(CType c_boolean4
+                                           , "and"
+                                           , [Arg (CType Bot, "that")])
+                                   ]}
+                           ; tau_i = Bot
+                           ; tau_o = Top
+                           }
 
 let wellformed_classes = [
   c_number
@@ -208,4 +252,7 @@ let wellformed_classes = [
   ; c_boolean4
 ]
 
-let malformed_classes = []
+let malformed_classes = [
+  c_bad_boolean5
+  ; c_bad_boolean6
+]
