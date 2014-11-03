@@ -74,8 +74,34 @@ let c_true = Class { cls = { name = "True"
                    ; tau_o = Top
                    }
 
+let c_false = Class { cls = { name = "False"
+                            ; param = "False_param"
+                            ; extends = Top
+                            ; implements = Some i_boolean
+                            ; fields = []
+                            ; methods = [
+                             (Method (IType i_boolean_abs
+                                     , "not"
+                                     , []))
+                           ; (Method (IType i_boolean_abs
+                                     , "and"
+                                     , [Arg (IType i_boolean_abs, "that")]))
+                           ; (Method (IType i_boolean_abs
+                                     , "or"
+                                     , [Arg (IType i_boolean_abs, "that")]))
+                           ; (Method (CType Top
+                                     , "special_false_method"
+                                     , [Arg (IType i_boolean_abs, "that")
+                                       ; Arg (CType Top, "and_another")]))
+                            ]
+                           }
+                   ; tau_i = Bot
+                   ; tau_o = Top
+                   }
+
 let wellformed = [
   c_true
+; c_false
 ]
 
 let malformed = [
