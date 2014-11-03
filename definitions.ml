@@ -47,7 +47,7 @@ let rec context_lookup (k:cname) (ctx:context) : ctype =
   match ctx with
   | [] -> failwith (Format.sprintf "unbound variable '%s'" k)
   | (k',_,tau_o)::tl -> if k = k' then tau_o else context_lookup k tl
-let rec context_add k tau_i tau_o ctx =
+let rec context_add (k:cname) (tau_i:ctype) (tau_o:ctype) (ctx:context) =
   match ctx with
   | [] -> (k, tau_i, tau_o) :: ctx
   | (k',t',t'') :: tl ->
@@ -80,17 +80,17 @@ let rec subst (hole:vclass) (tau_i':vclass) (tau_o':vclass) : vclass =
                         }
   end
 
-let rec vclass_of_ctype (c:ctype) (ctx:context) : vclass =
+let rec vclass_of_ctype (c:ctype) (ctx:context) : vclass option =
   begin match c with
     | TVar k  -> vclass_of_ctype (context_lookup k ctx) (context_remove k ctx)
-    | CType vc -> vc
-    | IType vi -> failwith "vclass_of_ctype"
+    | CType vc -> Some vc
+    | IType vi -> None
   end
-let rec vinterface_of_ctype (c:ctype) (ctx:context) : vinterface =
+let rec vinterface_of_ctype (c:ctype) (ctx:context) : vinterface option =
   begin match c with
     | TVar k  -> vinterface_of_ctype (context_lookup k ctx) (context_remove k ctx)
-    | CType vc -> failwith "vinterface_of_ctype"
-    | IType vi -> vi
+    | CType vc -> None
+    | IType vi -> Some vi
   end
 
 (*** collections ***)
@@ -151,6 +151,17 @@ let rec inherits (c:vclass) (d:vclass) : vclass option =
        end
   end
 
+let rec i_inherits (i1:vinterface) (i2:vinterface) : vinterface option =
+  let (Interface ir1, Interface ir2) = i1, i2 in
+  if ir1.intr.iname = ir2.intr.iname
+  then None
+  else
+    let () = if debug then Format.printf "[i_inherit] checking '%s' <:: '%s'\n" ir1.intr.iname ir2.intr.iname in
+    match ir1.intr.iextends with
+    | None -> None
+    | Some (Interface ir1') when ir1'.intr.iname = ir2.intr.iname -> Some (Interface ir1')
+    | Some i1' -> i_inherits i1' i2
+
 let inherits_eq (c:vclass) (d:vclass) : vclass option =
   begin
     match c,d with
@@ -160,47 +171,83 @@ let inherits_eq (c:vclass) (d:vclass) : vclass option =
     | _, _ -> inherits c d
   end
 
-let rec subtype (c:vclass) (d:vclass) : bool =
+let i_inherits_eq (i1:vinterface) (i2:vinterface) : vinterface option =
+  let (Interface ir1, Interface ir2) = i1, i2 in
+  if ir1.intr.iname = ir2.intr.iname
+  then Some i1
+  else i_inherits i1 i2
+
+let rec ccsubtype (c:vclass) (d:vclass) : bool =
   begin
     match c, d with
     | Bot, _ -> true
     | _, Top -> true
     | Class c', Class d' ->
-       let () = if debug then Format.printf "[subtype] checking '%s' <: '%s'\n" c'.cls.name d'.cls.name in
+       let () = if debug then Format.printf "[ccsubtype] checking '%s' <: '%s'\n" c'.cls.name d'.cls.name in
        let c_inhr = inherits_eq c d in
        (* if c_opt is none, return false *)
        begin
          match c_inhr with
          | None -> false
-         | Some Bot -> failwith "[subtype] found malformed class inheriting Bot"
-         | Some Top -> failwith "[subtype] should never reach this TOP case"
+         | Some Bot -> failwith "[ccsubtype] found malformed class inheriting Bot"
+         | Some Top -> failwith "[ccsubtype] should never reach this TOP case"
          | Some (Class vc) ->
             (* Check subtyping on both parameters *)
-            (&&)
-              (subtype
-                 d'.tau_i
-                 (subst vc.tau_i c'.tau_o c'.tau_i))
-              (subtype
-                 (subst vc.tau_o c'.tau_i c'.tau_o)
-                 d'.tau_o)
+            let tau_i_okay = ccsubtype d'.tau_i
+                                       (subst vc.tau_i c'.tau_o c'.tau_i) in
+            let tau_o_okay = ccsubtype (subst vc.tau_o c'.tau_i c'.tau_o)
+                                       d'.tau_o in
+            (&&) tau_i_okay tau_o_okay
         end
     | _, _ -> false
+  end
+
+let iisubtype (i1:vinterface) (i2:vinterface) : bool =
+  let (Interface ir1, Interface ir2) = i1 , i2 in
+  let i_inhr = i_inherits_eq i1 i2 in
+  begin match i_inhr with
+        | None -> false
+        | Some (Interface ir') ->
+           let tau_i_okay = ccsubtype ir2.itau_i
+                                      (subst ir'.itau_i ir1.itau_o ir1.itau_i) in
+           let tau_o_okay = ccsubtype (subst ir'.itau_o ir1.itau_i  ir1.itau_o)
+                                      ir2.itau_o in
+           (&&) tau_i_okay tau_o_okay
+  end
+
+let cisubtype (c1:vclass) (i2:vinterface) : bool =
+  begin match c1 with
+  | Bot -> true
+  | Top -> false
+  | Class cr ->
+     (* If directly implements or implements something that extends it *)
+     (* let  = implements_eq c1 i2 in *)
+     failwith "cisubtype not implemented"
+  end
+
+let subtype (ctx:context) (c1:ctype) (c2:ctype) : bool =
+  let class1 = vclass_of_ctype c1 ctx in
+  let intr1  = vinterface_of_ctype c1 ctx in
+  let class2 = vclass_of_ctype c2 ctx in
+  let intr2  = vinterface_of_ctype c2 ctx in
+  begin match (class1, intr1, class2, intr2) with
+  | (Some vc1, None    , Some vc2, None    ) -> ccsubtype vc1 vc2
+  | (None    , Some vi1, None    , Some vi2) -> iisubtype vi1 vi2
+  | (Some vc1, None    , None    , Some vi2) -> cisubtype vc1 vi2
+  | _ -> false
   end
 
 let subtype_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
   let Method (r1, n1, args1) = m1 in
   let Method (r2, n2, args2) = m2 in
   (* m1.returntype <: m2.returntype *)
-  let r1_t = vclass_of_ctype r1 ctx in
-  let r2_t = vclass_of_ctype r2 ctx in
-  let r_ok = subtype r1_t r2_t in
+  let r_ok = subtype ctx r1 r2 in
   (* forall args, m2.arg <: m1.arg *)
   let ctx' = context_flip ctx in
   let a_ok =
     ((List.length args1) = (List.length args2))
     && (List.fold_left2 (fun acc (Arg (a1,_)) (Arg (a2,_)) ->
-                         acc && subtype (vclass_of_ctype a2 ctx')
-                                        (vclass_of_ctype a1 ctx'))
+                         acc && subtype ctx' a2 a1)
                        true args1 args2)
   in
   and_all [r_ok; a_ok]
@@ -208,6 +255,8 @@ let subtype_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
 (*** well-formedness ***)
 (* trivial now, may want to check uniqueness later *)
 let param_ok (ctx:context) (c:class_record) : bool =
+  true
+let iparam_ok (ctx:context) (c:interface_record) : bool =
   true
 let rec class_ok_aux (ctx:context) (c:vclass) : bool =
   begin
@@ -225,7 +274,17 @@ let rec class_ok_aux (ctx:context) (c:vclass) : bool =
 and interface_ok_aux (ctx:context) (i:vinterface) : bool =
   begin
     match i with
-    | Interface ir -> failwith "cannot check interface"
+    | Interface ir ->
+       let ctx' = context_add (ir.intr.iparam) (CType ir.itau_i) (CType ir.itau_o) ctx in
+       let p_ok = iparam_ok ctx' ir in
+       let e_ok =
+         match ir.intr.iextends with
+         | None -> true
+         | Some i -> interface_ok_aux ctx' i
+       in
+       let f_ok = and_all (List.map (field_ok ctx') (ir.intr.ifields)) in
+       let m_ok = imethods_ok ctx' ir in
+       and_all [p_ok; e_ok; f_ok; m_ok]
   end
 and arg_ok (ctx:context) (a:carg) : bool =
   match a with | Arg (t, name) -> type_ok ctx t
@@ -233,6 +292,23 @@ and body_ok (ctx:context) : bool =
   true (* TODO want to allow implementations, eventually *)
 and field_ok (ctx:context) (f:cfield) : bool =
   match f with | Field (t, name) -> type_ok ctx t
+and imethods_ok (ctx:context) (ir:interface_record) : bool =
+  let extm_set = collect_implements_methods ir.intr.iextends in
+  let im_set   = MethodSet.of_list ir.intr.imethods in
+  (* No dups! *)
+  let no_dups  = (=) (List.length ir.intr.imethods) (MethodSet.cardinal im_set) in
+  (* Each method typechecks *)
+  let types_ok = List.fold_left
+    (fun acc m ->
+     let Method (ret_type, name, args) = m in
+     acc
+     && type_ok ctx ret_type
+     && (if MethodSet.mem m extm_set
+         then subtype_method ctx m (MethodSet.find m extm_set)
+         else true)
+    ) true ir.intr.imethods
+  in
+  and_all [no_dups; types_ok]
 and methods_ok (ctx:context) (c:class_record) : bool =
   (* All methods we possibly overwrite *)
   let extm_set = collect_extends_methods c.cls.extends in
