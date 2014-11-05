@@ -3,6 +3,7 @@ open Definitions
 let i_boolean_abs = Interface { intr = { iname = "iBoolean_abs"
                                    ; iparam = "iBool_ABS"
                                    ; iextends = None
+                                   ; isatisfies = None
                                    ; ifields = []
                                    ; imethods = []
                                    }
@@ -13,6 +14,7 @@ let i_boolean_abs = Interface { intr = { iname = "iBoolean_abs"
 let i_boolean = Interface { intr = { iname = "iBoolean"
                                    ; iparam = "iBoolean_param"
                                    ; iextends = Some i_boolean_abs
+                                   ; isatisfies = None
                                    ; ifields = []
                                    ; imethods = [
                                      (Method (IType i_boolean_abs
@@ -33,6 +35,7 @@ let c_true_malformed1 = Class { cls = { name = "True1"
                                      ; param = "TRUE1_PARAM"
                                      ; extends = Top
                                      ; implements = Some i_boolean
+                           ; satisfies = None
                                      ; fields = []
                                      ; methods = []
                                      }
@@ -43,6 +46,7 @@ let c_true_malformed2 = Class { cls = { name = "True2"
                                      ; param = "TRUE2_PARAM"
                                      ; extends = Top
                                      ; implements = Some i_boolean
+                           ; satisfies = None
                                      ; fields = []
                                      ; methods = [
                                        (Method (IType i_boolean_abs
@@ -58,6 +62,7 @@ let c_true = Class { cls = { name = "True"
                            ; param = "True_param"
                            ; extends = Top
                            ; implements = Some i_boolean
+                           ; satisfies = None
                            ; fields = []
                            ; methods = [
                              (Method (IType i_boolean_abs
@@ -78,6 +83,7 @@ let c_false = Class { cls = { name = "False"
                             ; param = "False_param"
                             ; extends = Top
                             ; implements = Some i_boolean
+                           ; satisfies = None
                             ; fields = []
                             ; methods = [
                              (Method (IType i_boolean_abs

@@ -44,4 +44,4 @@ let test_intarray_numlist  = test (ccsubtype c_integer_array c_number_list)
 let test_intarray_toplist  = test (ccsubtype c_integer_array c_top_list)
 let test_intarray_top      = test (ccsubtype c_integer_array Top)
 
-let () = print_endline "---ALL (ccsubtype) TESTS PASS---"
+(* let () = print_endline "---ALL (ccsubtype) TESTS PASS---" *)

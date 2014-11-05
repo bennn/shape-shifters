@@ -10,32 +10,50 @@ and  cmethod  = Method of ctype * cname * carg list
 (* and  cexpr    = Var of cname | New of class_record | Null *)
 and  class_sig = { name : cname
                  ; param : cname
-                 ; extends : vclass
-                 ; implements : vinterface option
-                 (* ; satisfies : cshape *)
-                 ; fields : cfield list
-                 ; methods : cmethod list
+                 ; extends : (predicate* vclass)
+                 ; implements : (predicate * vinterface) option
+                 ; satisfies : (predicate * vshape) option
+                 ; fields : (predicate * cfield) list
+                 ; methods : (predicate * cmethod) list
                  }
+and interface_sig = { iname : cname
+                    ; iparam : cname
+                    ; iextends : (predicate * vinterface) option
+                    ; isatisfies : (predicate * vshape) option
+                    ; ifields : (predicate * cfield) list
+                    ; imethods : (predicate * cmethod) list
+                    }
+and shape_sig = { sname : cname
+                ; sextends : (predicate * vshape) option
+                ; sfields : (predicate * cfield) list
+                ; smethods : (predicate * cmethod) list
+                }
 (* instantiation is a Class + ti + to *)
 and class_record  = { cls   : class_sig
                     ; tau_i : vclass
                     ; tau_o : vclass
                     }
-and vclass = Class of class_record | Top | Bot
-and interface_sig = { iname : cname
-                    ; iparam : cname
-                    ; iextends : vinterface option
-                    ; ifields : cfield list
-                    ; imethods : cmethod list
-                    }
-(* not top/bot for interfaces, but maybe there should be *)
-(* actually, Top/Bot should be ctypes, probably *)
 and interface_record  = { intr   : interface_sig
                         ; itau_i : vclass
                         ; itau_o : vclass
                         }
+and shape_record = { shp : shape_sig
+                   ; stau_i : vclass
+                   ; stau_o : vclass
+                   }
+and predicate = Satisfies of vshape | Nil
+and vclass = Class of class_record | Top | Bot
+(* not top/bot for interfaces, but maybe there should be *)
+(* actually, Top/Bot should be ctypes, probably *)
 and vinterface = Interface of interface_record
+and vshape = Shape of shape_record
 and  ctype    = TVar of string | CType of vclass | IType of vinterface
+
+let string_of_vclass (vc:vclass) : string =
+  match vc with
+  | Top -> "Top"
+  | Bot -> "Bot"
+  | Class cr -> cr.cls.name
 
 (*** context ***)
 (* Kind Context maps type variables *)
@@ -70,6 +88,8 @@ let rec context_flip ctx =
   | (k, tau_i, tau_o) :: tl -> (k, tau_o, tau_i) :: context_flip tl
 
 let rec subst (hole:vclass) (tau_i':vclass) (tau_o':vclass) : vclass =
+  (* should this substitute in the extends/implements? *)
+  let () = Format.printf "[subst] hole is '%s'\n" (string_of_vclass hole) in
   begin
     match hole with
     | Top -> Top
@@ -95,8 +115,8 @@ let rec vinterface_of_ctype (c:ctype) (ctx:context) : vinterface option =
 
 (*** collections ***)
 module MethodSet = Set.Make (struct
-  type t = cmethod
-  let compare (Method (_,n1,_)) (Method (_,n2,_)) = Pervasives.compare n1 n2
+  type t = predicate * cmethod
+  let compare (p1, (Method (_,n1,_))) (p2, (Method (_,n2,_))) = Pervasives.compare n1 n2
 end)
 (* Build a set of current & super methods -- these are what the current class might possibly override *)
 let rec collect_extends_methods_aux (acc:MethodSet.t) (c:vclass) : MethodSet.t =
@@ -119,6 +139,16 @@ let rec collect_implements_methods_aux (acc:MethodSet.t) (v:vinterface option) :
   end
 let collect_implements_methods (v:vinterface option) : MethodSet.t =
   collect_implements_methods_aux MethodSet.empty v
+
+let rec collect_satisfies_methods_aux (acc:MethodSet.t) (s:vshape option) : MethodSet.t =
+  match s with
+  | None -> acc
+  | Some (Shape sr) -> collect_satisfies_methods_aux
+                         (MethodSet.union acc (MethodSet.of_list sr.shp.smethods))
+                         sr.shp.sextends
+
+let collect_satisfies_methods (s:vshape option) : MethodSet.t =
+  collect_satisfies_methods_aux MethodSet.empty s
 
 (*** misc ***)
 let and_all xs = List.fold_left (fun acc x -> acc && x) true  xs
@@ -286,6 +316,17 @@ and interface_ok_aux (ctx:context) (i:vinterface) : bool =
        let m_ok = imethods_ok ctx' ir in
        and_all [p_ok; e_ok; f_ok; m_ok]
   end
+and shape_ok_aux (ctx:context) (s:vshape) : bool =
+  match s with
+  | Shape sr ->
+     let e_ok =
+       match sr.shp.sextends with
+       | None -> true
+       | Some s' -> shape_ok_aux ctx s'
+     in
+     let f_ok = and_all (List.map (field_ok ctx) sr.shp.sfields) in
+     let m_ok = smethods_ok ctx sr in
+     and_all [e_ok; f_ok; m_ok]
 and arg_ok (ctx:context) (a:carg) : bool =
   match a with | Arg (t, name) -> type_ok ctx t
 and body_ok (ctx:context) : bool =
@@ -309,11 +350,29 @@ and imethods_ok (ctx:context) (ir:interface_record) : bool =
     ) true ir.intr.imethods
   in
   and_all [no_dups; types_ok]
+and smethods_ok (ctx:context) (sr:shape_record) : bool =
+  let extm_set = collect_satisfies_methods sr.shp.sextends in
+  let sm_set = MethodSet.of_list sr.shp.smethods in
+  (* no duplicate methods *)
+  let no_dups = (=) (List.length sr.shp.smethods) (MethodSet.cardinal sm_set) in
+  (* all methods well-typed with respect to parent *)
+  let types_ok = List.fold_left
+    (fun acc m ->
+     let Method (ret_type, name, args) = m in
+     acc
+     && type_ok ctx ret_type
+     && (if MethodSet.mem m extm_set
+         then subtype_method ctx m (MethodSet.find m extm_set)
+         else true)
+    ) true sr.shp.smethods
+  in
+  and_all [no_dups; types_ok]
 and methods_ok (ctx:context) (c:class_record) : bool =
   (* All methods we possibly overwrite *)
   let extm_set = collect_extends_methods c.cls.extends in
   (* All methods we need to implement. That is, all interface methods minus inherited methods. *)
   let intm_set = MethodSet.diff (collect_implements_methods c.cls.implements) extm_set in
+  let satm_set = MethodSet.diff (collect_satisfies_methods c.cls.satisfies) extm_set in
   let clsm_set = MethodSet.of_list c.cls.methods in
   (* CHECK CONDITIONS *)
   (* First, no duplicates *)
@@ -322,6 +381,7 @@ and methods_ok (ctx:context) (c:class_record) : bool =
   in
   (* Next, all interfaces implemented *)
   let interfaces_implemented = MethodSet.is_empty (MethodSet.diff intm_set clsm_set) in
+  let shapes_satisfied = MethodSet.is_empty (MethodSet.diff satm_set clsm_set) in
   (* Next, all methods well-typed *)
   let types_ok = List.fold_left
     (fun acc m ->
@@ -335,9 +395,12 @@ and methods_ok (ctx:context) (c:class_record) : bool =
      && (if MethodSet.mem m intm_set
          then subtype_method ctx m (MethodSet.find m intm_set)
          else true)
+     && (if MethodSet.mem m satm_set
+         then subtype_method ctx m (MethodSet.find m satm_set)
+         else true)
     ) true c.cls.methods
   in
-  and_all [no_duplicates; interfaces_implemented; types_ok]
+  and_all [no_duplicates; interfaces_implemented; shapes_satisfied; types_ok]
 and type_ok (ctx:context) (t:ctype) : bool =
   match t with
   | TVar str -> context_mem str ctx
@@ -348,3 +411,5 @@ let class_ok (c:vclass) : bool =
   class_ok_aux empty_context c
 let interface_ok (i:vinterface) : bool =
   interface_ok_aux empty_context i
+let shape_ok (s:vshape) : bool =
+  shape_ok_aux empty_context s
