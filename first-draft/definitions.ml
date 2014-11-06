@@ -49,6 +49,13 @@ and vinterface = Interface of interface_record
 and vshape = Shape of shape_record
 and  ctype    = TVar of string | CType of vclass | IType of vinterface
 
+(*** misc ***)
+let and_all xs = List.fold_left (fun acc x -> acc && x) true  xs
+let record_of_vclass_exn (c:vclass) : class_record =
+  match c with
+  | Top | Bot -> failwith "record_of_vclass_exn"
+  | Class cr  -> cr
+
 let string_of_vclass (vc:vclass) : string =
   match vc with
   | Top -> "Top"
@@ -113,86 +120,29 @@ let rec vinterface_of_ctype (c:ctype) (ctx:context) : vinterface option =
     | IType vi -> Some vi
   end
 
-(*** collections ***)
-module MethodSet = Set.Make (struct
-  type t = predicate * cmethod
-  let compare (p1, (Method (_,n1,_))) (p2, (Method (_,n2,_))) = Pervasives.compare n1 n2
-end)
-(* Build a set of current & super methods -- these are what the current class might possibly override *)
-let rec collect_extends_methods_aux (acc:MethodSet.t) (c:vclass) : MethodSet.t =
-  begin
-    match c with
-    | Top | Bot -> acc
-    | Class cr  -> collect_extends_methods_aux
-                     (MethodSet.union acc (MethodSet.of_list cr.cls.methods))
-                     cr.cls.extends
-  end
-let collect_extends_methods (c:vclass) : MethodSet.t =
-  collect_extends_methods_aux MethodSet.empty c
-
-let rec collect_implements_methods_aux (acc:MethodSet.t) (v:vinterface option) : MethodSet.t =
-  begin match v with
-  | None -> acc
-  | Some (Interface ir) -> collect_implements_methods_aux
-                             (MethodSet.union acc (MethodSet.of_list ir.intr.imethods))
-                             ir.intr.iextends
-  end
-let collect_implements_methods (v:vinterface option) : MethodSet.t =
-  collect_implements_methods_aux MethodSet.empty v
-
-let rec collect_satisfies_methods_aux (acc:MethodSet.t) (s:vshape option) : MethodSet.t =
-  match s with
-  | None -> acc
-  | Some (Shape sr) -> collect_satisfies_methods_aux
-                         (MethodSet.union acc (MethodSet.of_list sr.shp.smethods))
-                         sr.shp.sextends
-
-let collect_satisfies_methods (s:vshape option) : MethodSet.t =
-  collect_satisfies_methods_aux MethodSet.empty s
-
-(*** misc ***)
-let and_all xs = List.fold_left (fun acc x -> acc && x) true  xs
-let record_of_vclass_exn (c:vclass) : class_record =
-  match c with
-  | Top | Bot -> failwith "record_of_vclass_exn"
-  | Class cr  -> cr
-(* let or_all  f xs = List.fold_left (fun acc x -> acc || f x) false xs *)
-
 (*** inheritance + subtyping ***)
 (* record-only version would avoid some checks *)
 let rec inherits (c:vclass) (d:vclass) : vclass option =
-  begin
-    match c,d with
-    | Bot, Bot -> None
-    | Bot, Class d' -> (* funky *) Some (Class d')
-    | Bot, Top -> failwith "[<::] tricky case, bot <:: top. IDK"
-    | Top, _ -> None
-    | Class _ , Bot -> None
-    | Class _ , Top -> failwith "[<::] tricky case, CLS <:: TOP. idk"
-    | Class c', Class d' when c'.cls.name = d'.cls.name -> None
-    | Class c', Class d' ->
-       let () = if debug then Format.printf "[inherit] checking '%s' <:: '%s'\n" c'.cls.name d'.cls.name in
-       begin
-         match c'.cls.extends with
-         | Top -> None (* c extends Top *)
-         | Bot -> failwith "[inherits] found a malfored class"
-         | Class cr when cr.cls.name = d'.cls.name -> Some (Class cr)
-         | Class cr -> inherits c'.cls.extends d
+  begin match c,d with
+  | Bot, Bot -> None
+  | Bot, Class d' -> (* funky *) Some (Class d')
+  | Bot, Top -> failwith "[<::] tricky case, bot <:: top. IDK"
+  | Top, _ -> None
+  | Class _ , Bot -> None
+  | Class _ , Top -> failwith "[<::] tricky case, CLS <:: TOP. idk"
+  | Class c', Class d' when c'.cls.name = d'.cls.name -> None
+  | Class c', Class d' ->
+     let () = if debug then Format.printf "[inherit] checking '%s' <:: '%s'\n" c'.cls.name d'.cls.name in
+     if cpredicate_ok c'.tau_o (fst c'.cls.extends) then
+       begin match snd c'.cls.extends with
+       | Top -> None (* c extends Top *)
+       | Bot -> failwith "[inherits] found a malfored class"
+       | Class cr when cr.cls.name = d'.cls.name -> Some (Class cr)
+       | Class cr -> inherits (Class cr) d
        end
+     else None
   end
-
-let rec i_inherits (i1:vinterface) (i2:vinterface) : vinterface option =
-  let (Interface ir1, Interface ir2) = i1, i2 in
-  if ir1.intr.iname = ir2.intr.iname
-  then None
-  else
-    let () = if debug then Format.printf "[i_inherit] checking '%s' <:: '%s'\n" ir1.intr.iname ir2.intr.iname in
-    match ir1.intr.iextends with
-    | None -> None
-    | Some (Interface ir1') when ir1'.intr.iname = ir2.intr.iname -> Some (Interface ir1')
-    | Some i1' -> i_inherits i1' i2
-
-let inherits_eq (c:vclass) (d:vclass) : vclass option =
+and inherits_eq (c:vclass) (d:vclass) : vclass option =
   begin
     match c,d with
     | Bot, Bot -> failwith "[<=::] tricky case, bot bot"
@@ -201,38 +151,71 @@ let inherits_eq (c:vclass) (d:vclass) : vclass option =
     | _, _ -> inherits c d
   end
 
-let i_inherits_eq (i1:vinterface) (i2:vinterface) : vinterface option =
+and i_inherits (i1:vinterface) (i2:vinterface) : vinterface option =
+  let (Interface ir1, Interface ir2) = i1, i2 in
+  if ir1.intr.iname = ir2.intr.iname
+  then None
+  else
+    let () = if debug then Format.printf "[i_inherit] checking '%s' <:: '%s'\n" ir1.intr.iname ir2.intr.iname in
+      begin match ir1.intr.iextends with
+      | None -> None
+      | Some (p, Interface ir1') ->
+         if cpredicate_ok (ir1.itau_o) p then (
+           if ir1'.intr.iname = ir2.intr.iname
+           then Some (Interface ir1')
+           else i_inherits (Interface ir1') i2
+         )else None
+      end
+and i_inherits_eq (i1:vinterface) (i2:vinterface) : vinterface option =
   let (Interface ir1, Interface ir2) = i1, i2 in
   if ir1.intr.iname = ir2.intr.iname
   then Some i1
   else i_inherits i1 i2
 
-let rec ccsubtype (c:vclass) (d:vclass) : bool =
-  begin
-    match c, d with
-    | Bot, _ -> true
-    | _, Top -> true
-    | Class c', Class d' ->
+and s_inherits (s1:vshape) (s2:vshape) : vshape option =
+  let (Shape sr1, Shape sr2) = s1, s2 in
+  if sr1.shp.sname = sr2.shp.sname then None
+  else
+    let () = if debug then Format.printf "[s_inherit] checking '%s' <:: '%s'\n" sr1.shp.sname sr2.shp.sname in
+    begin match sr1.shp.sextends with
+    | None -> None
+    | Some (p, Shape sr1') ->
+       if cpredicate_ok (sr1.stau_o) p then (
+         if sr1'.shp.sname = sr2.shp.sname
+         then Some (Shape sr1')
+         else s_inherits (Shape sr1') s2
+       )else None
+    end
+and s_inherits_eq (s1:vshape) (s2:vshape) : vshape option =
+  let (Shape sr1, Shape sr2) = s1, s2 in
+  if sr1.shp.sname = sr2.shp.sname
+  then Some s1
+  else s_inherits s1 s2
+
+and ccsubtype (c:vclass) (d:vclass) : bool =
+  begin match c, d with
+  | Bot, _ -> true
+  | _, Top -> true
+  | Class c', Class d' ->
        let () = if debug then Format.printf "[ccsubtype] checking '%s' <: '%s'\n" c'.cls.name d'.cls.name in
        let c_inhr = inherits_eq c d in
        (* if c_opt is none, return false *)
-       begin
-         match c_inhr with
-         | None -> false
-         | Some Bot -> failwith "[ccsubtype] found malformed class inheriting Bot"
-         | Some Top -> failwith "[ccsubtype] should never reach this TOP case"
-         | Some (Class vc) ->
-            (* Check subtyping on both parameters *)
-            let tau_i_okay = ccsubtype d'.tau_i
-                                       (subst vc.tau_i c'.tau_o c'.tau_i) in
-            let tau_o_okay = ccsubtype (subst vc.tau_o c'.tau_i c'.tau_o)
-                                       d'.tau_o in
-            (&&) tau_i_okay tau_o_okay
-        end
-    | _, _ -> false
+       begin match c_inhr with
+       | None -> false
+       | Some Bot -> failwith "[ccsubtype] found malformed class inheriting Bot"
+       | Some Top -> failwith "[ccsubtype] should never reach this TOP case"
+       | Some (Class vc) ->
+          (* Check subtyping on both parameters *)
+          let tau_i_okay = ccsubtype d'.tau_i
+                                     (subst vc.tau_i c'.tau_o c'.tau_i) in
+          let tau_o_okay = ccsubtype (subst vc.tau_o c'.tau_i c'.tau_o)
+                                     d'.tau_o in
+          (&&) tau_i_okay tau_o_okay
+       end
+  | _, _ -> false
   end
 
-let iisubtype (i1:vinterface) (i2:vinterface) : bool =
+and iisubtype (i1:vinterface) (i2:vinterface) : bool =
   let (Interface ir1, Interface ir2) = i1 , i2 in
   let i_inhr = i_inherits_eq i1 i2 in
   begin match i_inhr with
@@ -245,7 +228,7 @@ let iisubtype (i1:vinterface) (i2:vinterface) : bool =
            (&&) tau_i_okay tau_o_okay
   end
 
-let cisubtype (c1:vclass) (i2:vinterface) : bool =
+and cisubtype (c1:vclass) (i2:vinterface) : bool =
   begin match c1 with
   | Bot -> true
   | Top -> false
@@ -255,7 +238,7 @@ let cisubtype (c1:vclass) (i2:vinterface) : bool =
      failwith "cisubtype not implemented"
   end
 
-let subtype (ctx:context) (c1:ctype) (c2:ctype) : bool =
+and subtype (ctx:context) (c1:ctype) (c2:ctype) : bool =
   let class1 = vclass_of_ctype c1 ctx in
   let intr1  = vinterface_of_ctype c1 ctx in
   let class2 = vclass_of_ctype c2 ctx in
@@ -267,7 +250,7 @@ let subtype (ctx:context) (c1:ctype) (c2:ctype) : bool =
   | _ -> false
   end
 
-let subtype_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
+and subtype_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
   let Method (r1, n1, args1) = m1 in
   let Method (r2, n2, args2) = m2 in
   (* m1.returntype <: m2.returntype *)
@@ -281,6 +264,128 @@ let subtype_method (ctx:context) (m1:cmethod) (m2:cmethod) : bool =
                        true args1 args2)
   in
   and_all [r_ok; a_ok]
+
+and sssubtype (s1:shape_record) (s2:shape_record) : bool =
+  let s_inhr = s_inherits_eq (Shape s1) (Shape s2) in
+  begin match s_inhr with
+  | None -> false
+  | Some (Shape sr') ->
+     let tau_i_okay = ccsubtype s2.stau_i
+                                (subst sr'.stau_i s1.stau_o s1.stau_i) in
+     let tau_o_okay = ccsubtype (subst sr'.stau_o s1.stau_i s1.stau_o)
+                                s2.stau_o in
+     (&&) tau_i_okay tau_o_okay
+  end
+
+and cpredicate_ok (vc:vclass) (pred:predicate) : bool =
+  match vc with
+  | Top | Bot -> false
+  | Class cr ->
+  begin match pred with
+  | Nil -> true
+  | Satisfies (Shape s) ->
+     begin match cr.cls.satisfies with
+     | None -> false
+     | Some (p', Shape sr) ->
+        begin match cr.tau_o with
+        | Top | Bot -> false
+        | Class cr' -> if cpredicate_ok (Class cr') p' then
+                         (* check that vs <: s *)
+                         (* really need to subst... ugh *)
+                         sssubtype sr s
+                       else false
+        end
+     end
+  end
+
+and ipredicate_ok (ir:interface_record) (pred:predicate) : bool =
+  begin match pred with
+  | Nil -> true
+  | Satisfies (Shape s) ->
+     begin match ir.intr.isatisfies with
+     | None -> false
+     | Some (p', (Shape sr)) ->
+        begin match ir.itau_o with
+        | Top | Bot -> false
+        | Class cr' -> if cpredicate_ok (Class cr') p' then
+                         sssubtype sr s
+                       else false
+        end
+     end
+  end
+
+and spredicate_ok (sr:shape_record) (pred:predicate) : bool =
+  begin match pred with
+  | Nil -> true
+  | Satisfies (Shape s) ->
+     begin match sr.shp.sextends with
+     | None -> false
+     | Some (p', (Shape sr)) ->
+        begin match sr.stau_o with
+        | Top | Bot -> false
+        | Class cr' -> if cpredicate_ok (Class cr') p' then
+                         sssubtype sr s
+                       else false
+        end
+     end
+  end
+
+(*** collections ***)
+module MethodSet = Set.Make (struct
+  type t = predicate * cmethod
+  let compare (p1, (Method (_,n1,_))) (p2, (Method (_,n2,_))) = Pervasives.compare n1 n2
+end)
+(* Build a set of current & super methods -- these are what the current class might possibly override *)
+let rec collect_extends_methods_aux (acc:MethodSet.t) (c:vclass) : MethodSet.t =
+  begin
+    match c with
+    | Top | Bot -> acc
+    | Class cr  ->
+       (* Decide predicate *)
+       if cpredicate_ok (Class cr) (fst cr.cls.extends) then
+         (* it holds, recurse *)
+         collect_extends_methods_aux
+           (MethodSet.union acc (MethodSet.of_list cr.cls.methods))
+           (snd cr.cls.extends)
+       else acc (* done! *)
+  end
+let collect_extends_methods (c:vclass) : MethodSet.t =
+  collect_extends_methods_aux MethodSet.empty c
+
+let rec collect_implements_methods_aux (acc:MethodSet.t) (v:vinterface option) : MethodSet.t =
+  begin match v with
+  | None -> acc
+  | Some (Interface ir) ->
+     begin match ir.intr.iextends with
+     | None -> acc
+     | Some (p, Interface ir') ->
+        if ipredicate_ok ir p then
+          collect_implements_methods_aux
+            (MethodSet.union acc (MethodSet.of_list ir.intr.imethods))
+            (Some (Interface ir'))
+        else acc
+     end
+  end
+let collect_implements_methods (v:vinterface option) : MethodSet.t =
+  collect_implements_methods_aux MethodSet.empty v
+
+let rec collect_satisfies_methods_aux (acc:MethodSet.t) (s:vshape option) : MethodSet.t =
+  begin match s with
+  | None -> acc
+  | Some (Shape sr) ->
+     begin match sr.shp.sextends with
+     | None -> acc
+     | Some (p, Shape sr') ->
+        if spredicate_ok sr p then
+          collect_satisfies_methods_aux
+            (MethodSet.union acc (MethodSet.of_list sr.shp.smethods))
+            (Some (Shape sr'))
+        else acc
+     end
+  end
+
+let collect_satisfies_methods (s:vshape option) : MethodSet.t =
+  collect_satisfies_methods_aux MethodSet.empty s
 
 (*** well-formedness ***)
 (* trivial now, may want to check uniqueness later *)
@@ -296,7 +401,9 @@ let rec class_ok_aux (ctx:context) (c:vclass) : bool =
        (* bind param to tau_i tau_o *)
        let ctx' = context_add (c'.cls.param) (CType c'.tau_i) (CType c'.tau_o) ctx in
        let p_ok = param_ok ctx' c' in
-       let e_ok = class_ok_aux ctx' (c'.cls.extends) in
+       let e_ok = TODO TODO TODO
+         class_ok_aux ctx' (c'.cls.extends)
+       in
        let f_ok = and_all (List.map (field_ok ctx') (c'.cls.fields)) in
        let m_ok = methods_ok ctx' c' in
        and_all [p_ok; e_ok; f_ok; m_ok]
