@@ -13,9 +13,9 @@ and  type_t   = TVar of string
               | Top | Bot
 
 (* INTERFACE = name , params, extends, satisfies, methods *)
-type sig_t    = Interface of string
+type inter_t    = Interface of string
                              * (string list)
-                             * ((cond_t * sig_t)   list)
+                             * ((cond_t * inter_t)   list)
                              * ((cond_t * shape_t) list)
                              * (method_t list)
 type stmt_t   = Null (* | Return | If | While | ... *)
@@ -23,12 +23,12 @@ type stmt_t   = Null (* | Return | If | While | ... *)
 type class_t  = Class of string
                          * (string list)
                          * ((cond_t * class_t)  list)
-                         * ((cond_t * sig_t)    list)
+                         * ((cond_t * inter_t)    list)
                          * ((cond_t * shape_t)  list)
                          * ((method_t * stmt_t) list)
 
 (* VALUES = for the 'class table' *)
-type value_t = C of class_t | I of sig_t
+type sig_t = C of class_t | I of inter_t
 
 (* tostring functions *)
 let string_of_arg_t (arg:arg_t) : string =
@@ -54,24 +54,24 @@ let string_of_type_t (tt:type_t) : string =
   | Bot -> "Bottom"
   | Top -> "Top"
   end
-let string_of_sig_t (st:sig_t) : string =
+let string_of_inter_t (st:inter_t) : string =
   let Interface (name, _, _, _, _) = st in
   name
 let string_of_class_t (ct:class_t) : string =
   let Class (name, _, _, _, _, _) = ct in
   name
-let string_of_value_t (vt:value_t) : string =
+let string_of_sig_t (vt:sig_t) : string =
   begin match vt with
   | C c -> string_of_class_t c
-  | I i -> string_of_sig_t   i
+  | I i -> string_of_inter_t   i
   end
 
 (* Tables *)
-module ValueTable = Set.Make (struct
-  type t = value_t
+module SigTable = Set.Make (struct
+  type t = sig_t
   let compare t1 t2 =
-    Pervasives.compare (string_of_value_t t1)
-                       (string_of_value_t t2)
+    Pervasives.compare (string_of_sig_t t1)
+                       (string_of_sig_t t2)
 end)
 
 module ShapeTable = Set.Make (struct
