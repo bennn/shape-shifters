@@ -3,9 +3,9 @@ type arg_t    = Arg of type_t * string
 (* CONDITION = TVAR satisfies SHAPE | super TVAR satisfies SHAPE | NOTHING *)
 and  cond_t   = Sat of string * shape_t | SuperSat of string * shape_t | Nothing
 (* SHAPE = name , extends (shapes) , methods *)
-and  shape_t  = Shape of string * ((cond_t * shape_t) list) * (method_t list)
-(* METHOD = condition , return_type , name , args *)
-and  method_t = Method of cond_t * type_t * string * (arg_t list)
+and  shape_t  = Shape of string * ((cond_t * shape_t) list) * ((cond_t * method_t) list)
+(* METHOD = return_type , name , args *)
+and  method_t = Method of type_t * string * (arg_t list)
 (* TYPE = variable , instantiation, or the special TOP/BOT *)
 and  type_t   = TVar of string
               | Super of string
@@ -18,7 +18,7 @@ type inter_t    = Interface of string
                              * (string list)
                              * ((cond_t * inter_t) list)
                              * ((cond_t * shape_t) list)
-                             * (method_t list)
+                             * ((cond_t * method_t) list)
 type stmt_t   = Null (* | Return | If | While | ... *)
 (* CLASS = name , params, extends , implements , satisfies , methods+bodies *)
 type class_t  = Class of string
@@ -26,7 +26,7 @@ type class_t  = Class of string
                          * ((cond_t * class_t)  list)
                          * ((cond_t * inter_t)  list)
                          * ((cond_t * shape_t)  list)
-                         * ((method_t * stmt_t) list)
+                         * ((cond_t * (method_t * stmt_t)) list)
 
 (* VALUES = for the 'class table' *)
 type sig_t = C of class_t | I of inter_t
@@ -45,7 +45,7 @@ let string_of_cond_t (ct:cond_t) : string =
   | Nothing -> "[[nil]]"
   end
 let string_of_method_t (md:method_t) : string =
-  let Method (_, _, name, _) = md in
+  let Method (_, name, _) = md in
   name
 let string_of_type_t (tt:type_t) : string =
   begin match tt with
