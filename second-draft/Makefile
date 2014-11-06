@@ -1,2 +1,2 @@
 all:
-	ocamlc definitions.ml subtype.ml # wellformed.ml
+	ocamlc definitions.ml subtype.ml well_formed.ml

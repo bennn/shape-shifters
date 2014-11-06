@@ -64,8 +64,14 @@ let string_of_class_t (ct:class_t) : string =
 let string_of_sig_t (vt:sig_t) : string =
   begin match vt with
   | C c -> string_of_class_t c
-  | I i -> string_of_inter_t   i
+  | I i -> string_of_inter_t i
   end
+let name_of_class_t (ct:class_t) : string =
+  string_of_class_t ct
+let name_of_inter_t (it:inter_t) : string =
+  string_of_inter_t it
+let name_of_sig_t (vt:sig_t) : string =
+  string_of_sig_t vt
 
 (* Tables *)
 module StringMap   = Map.Make (String)
