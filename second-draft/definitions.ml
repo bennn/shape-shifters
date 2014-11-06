@@ -12,10 +12,11 @@ and  type_t   = TVar of string
               | Instance of string * (string -> (type_t * type_t))
               | Top | Bot
 
+(* the inter/class don't need to be recursive, could use strings. I don't think it matters *)
 (* INTERFACE = name , params, extends, satisfies, methods *)
 type inter_t    = Interface of string
                              * (string list)
-                             * ((cond_t * inter_t)   list)
+                             * ((cond_t * inter_t) list)
                              * ((cond_t * shape_t) list)
                              * (method_t list)
 type stmt_t   = Null (* | Return | If | While | ... *)
@@ -23,7 +24,7 @@ type stmt_t   = Null (* | Return | If | While | ... *)
 type class_t  = Class of string
                          * (string list)
                          * ((cond_t * class_t)  list)
-                         * ((cond_t * inter_t)    list)
+                         * ((cond_t * inter_t)  list)
                          * ((cond_t * shape_t)  list)
                          * ((method_t * stmt_t) list)
 
@@ -67,16 +68,5 @@ let string_of_sig_t (vt:sig_t) : string =
   end
 
 (* Tables *)
-module SigTable = Set.Make (struct
-  type t = sig_t
-  let compare t1 t2 =
-    Pervasives.compare (string_of_sig_t t1)
-                       (string_of_sig_t t2)
-end)
-
-module ShapeTable = Set.Make (struct
-  type t = shape_t
-  let compare s1 s2 =
-    Pervasives.compare (string_of_shape_t s1)
-                       (string_of_shape_t s2)
-end)
+module SigTable   = Map.Make (String)
+module ShapeTable = Map.Make (String) (* delete? *)
