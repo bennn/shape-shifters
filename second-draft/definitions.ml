@@ -68,5 +68,6 @@ let string_of_sig_t (vt:sig_t) : string =
   end
 
 (* Tables *)
-module SigTable   = Map.Make (String)
-module ShapeTable = Map.Make (String) (* delete? *)
+module StringMap   = Map.Make (String)
+type class_context = sig_t StringMap.t
+type shape_context = shape_t StringMap.t

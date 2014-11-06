@@ -1,25 +1,28 @@
 open Definitions
 
 (* Context = signatures (types), shapes, and type vars *)
-type context = sig_t SigTable.t
-               * shape_t ShapeTable.t
+type context = class_context
+               * shape_context
                * (string -> (type_t * type_t))
 
 let cDEBUG = false
 
+(* [update_vars vm ctx] update the var map in the context [ctx] to first look in [vm] *)
 let update_vars (vm:string -> (type_t * type_t)) (ctx:context) : context =
   let class_c, shape_c, var_c = ctx in
   let var_c' = fun v -> (try vm v with _ -> var_c v) in
   (class_c, shape_c, var_c')
 
+(* [inherits ctx t1 t2] Search valid parents of [t1] for the name of [t2].
+   Validity determined by the context [t1]. *)
 let rec inherits (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
   let () = if cDEBUG then Format.printf "[inherits] '%s' <:: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   let class_c, _, _ = ctx in
   begin match t1 , t2 with
   | Instance (name1, varmap1) , Instance (name2, varmap2) ->
      if name1 = name2 then None
-     else (* Search all valid parents. Sorry about the duplicate code here. *)
-       begin match SigTable.find name1 class_c with
+     else (* Search all valid parents. *)
+       begin match StringMap.find name1 class_c with
        | C (Class (_, _, exts, _, _, _))  ->
           List.fold_left (fun acc (cond, cls) ->
                           begin match acc with
@@ -68,7 +71,7 @@ and satisfies (tt:type_t) (shp:shape_t) (ctx:context) : bool =
   | Super v -> satisfies (snd (var_c v)) shp ctx
   | Instance (name, vm') ->
      let shapes =
-       begin match SigTable.find name class_c with
+       begin match StringMap.find name class_c with
        | C (Class (_,_,_,_,shps,_)) -> shps
        | I (Interface (_,_,_,shps,_)) -> shps
        end
@@ -97,7 +100,7 @@ let inherits_eq (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
   begin match t1, t2 with
   | Instance (name1, varmap1), Instance (name2, varmap2) ->
      if name1 = name2
-     then Some (SigTable.find name1 class_c)
+     then Some (StringMap.find name1 class_c)
      else inherits ctx t1 t2
   | _ -> None (* because this function is guarded by subtype *)
   end
