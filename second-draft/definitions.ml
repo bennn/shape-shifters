@@ -87,6 +87,12 @@ type context  = class_context
                * (variance * (string -> (type_t * type_t)))
 let context_init (cc:class_context) (sc:shape_context) (varmap:(string -> (type_t * type_t))) =
   (cc, sc, (Pos, varmap))
+let varmap_addvar vm k v =
+  (fun k' -> if k = k' then v else vm k')
+let context_addvar (ctx:context) (k:string) (v:type_t * type_t) : context =
+  let (cc, sc, (vnc, vm)) = ctx in
+  let vm' = varmap_addvar vm k v in
+  (cc, sc, (vnc, vm'))
 let flip_variance (ctx:context) : context =
   let (cc, sc, (vnc, varmap)) = ctx in
   let vnc' = match vnc with | Pos -> Neg | Neg -> Pos in

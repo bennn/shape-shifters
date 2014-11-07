@@ -19,8 +19,9 @@ let rec inherits (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
      else (* Search all valid parents. *)
        let parent_sigs =
          begin match StringMap.find name1 class_c with
-         | C (Class (_, _, exts, _, _, _))  ->
-            List.map (fun (p,c) -> (p, C c)) exts
+         | C (Class (_, _, exts, iexts, _, _))  ->
+            (List.map (fun (p,c) -> (p, C c)) exts)
+            @ (List.map (fun (p,i) -> (p, I i)) iexts)
          | I (Interface (_, _, iexts, _, _)) ->
             List.map (fun (p,i) -> (p, I i)) iexts
          end
@@ -120,7 +121,7 @@ let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
   (* the real deal *)
   | Instance (name1, varmap1), Instance (name2, varmap2) ->
      begin match inherits_eq ctx t1 t2 with
-     | None -> false
+     | None -> let () = if sDEBUG then Format.printf "[subtype] <:: failed\n" in false
      | Some r ->
         let tvars =
           begin match r with

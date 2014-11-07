@@ -1,10 +1,10 @@
 open Definitions
 open Test_utils
 
-let m_sig_and = Method( Instance("Boolean", empty_c)
+let m_sig_and = Method( Instance("Boolean", empty_varmap)
                       , "and"
-                      , [Arg(Instance("Boolean", empty_c), "that")])
-let m_sig_not = Method( Instance("Boolean", empty_c)
+                      , [Arg(Instance("Boolean", empty_varmap), "that")])
+let m_sig_not = Method( Instance("Boolean", empty_varmap)
                       , "not"
                       , [])
 
@@ -39,7 +39,7 @@ let c_true2 = Class ( "True2"
                    , []
                    , [ (NoCond, (Method( Bot
                                        , "and"
-                                       , [Arg(Instance("Boolean", empty_c), "that")])
+                                       , [Arg(Instance("Boolean", empty_varmap), "that")])
                                 , Null))
                      ; (NoCond, (m_sig_not, Null))])
 
@@ -56,7 +56,7 @@ let class_c =
       (StringMap.add (name_of_class_t c_false) (C c_false)
         StringMap.empty))
 let shape_c = StringMap.empty
-let var_c   = empty_c
+let var_c   = empty_varmap
 
 let ctx = context_init class_c shape_c var_c
 

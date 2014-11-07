@@ -12,6 +12,6 @@ let class_c =
 let shape_c =
   StringMap.add (name_of_shape_t s_object) s_object
     StringMap.empty
-let var_c   = empty_c
+let var_c   = empty_varmap
 
 let ctx = context_init class_c shape_c var_c

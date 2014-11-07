@@ -1,6 +1,6 @@
 open Definitions
 
-let empty_c = fun x ->
+let empty_varmap = fun x ->
   if x = "THIS"
   then (Bot, Bot)
   else failwith (Format.sprintf "unbound variable '%s'" x)

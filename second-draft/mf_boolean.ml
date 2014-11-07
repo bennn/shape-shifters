@@ -16,7 +16,7 @@ let c2 = Class ( "MF2"
                    , []
                    , [ (NoCond, (Method( Top
                                        , "and"
-                                       , [Arg(Instance("Boolean", empty_c), "that")])
+                                       , [Arg(Instance("Boolean", empty_varmap), "that")])
                                 , Null))
                      ; (NoCond, (Boolean.m_sig_not, Null))])
 
@@ -40,7 +40,7 @@ let c4 = Class ( "MF4"
                    , []
                    , [ (NoCond, (Method( Bot
                                        , "and"
-                                       , [Arg (Instance(name_of_class_t Boolean.c_true, empty_c), "that")])
+                                       , [Arg (Instance(name_of_class_t Boolean.c_true, empty_varmap), "that")])
                                 , Null))
                      ; (NoCond, (Boolean.m_sig_not, Null))])
 
@@ -48,7 +48,7 @@ let class_c =
   StringMap.add (name_of_class_t c1) (C c1)
     Boolean.class_c
 let shape_c = StringMap.empty
-let var_c   = empty_c
+let var_c   = empty_varmap
 
 let ctx = context_init class_c shape_c var_c
 let classes = [
