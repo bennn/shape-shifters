@@ -34,6 +34,9 @@ let test_sample1 () =
   let () = (* unparameterized shapes *)
     List.iter (fun x -> test (shape_ok Sample1.ctx0 x)) Sample1.shapes
   in
+  let () = (* sanity check *)
+    List.iter (fun x -> test (interface_ok Sample1.inter_ctx x)) Sample1.interfaces
+  in
   let () =
     let ctx' =
       context_addvar Sample1.ctx0
@@ -65,10 +68,24 @@ let test_sample1 () =
                               Sample1.i_container_param
                               (Instance("True", empty_varmap), Top)
     in
-    let () = Format.printf "-? Container<Boolean> <//: Container<True> " in
+    let () = Format.printf "-? Container<Boolean> <: Container<True> " in
     let () = test (subtype Sample1.ctx0 (Instance("Container", vm1)) (Instance("Container", vm2))) in
     let () = Format.printf "-? Container<True> <//: Container<Boolean> " in
     let () = test (not (subtype Sample1.ctx0 (Instance("Container", vm2)) (Instance("Container", vm1)))) in
+    ()
+  in
+  let () = (* interator boolean <: iterator top && iterator boolean </: iterator true *)
+    let vm1 = varmap_addvar empty_varmap
+                              Sample1.i_iterator_param
+                              (Bot, Instance("Boolean", empty_varmap))
+    and vm2 = varmap_addvar empty_varmap
+                              Sample1.i_iterator_param
+                              (Bot, Top)
+    in
+    let () = Format.printf "-? Iterator<Boolean> <: Iterator<Top> " in
+    let () = test (subtype Sample1.ctx0 (Instance("Iterator", vm1)) (Instance("Iterator", vm2))) in
+    let () = Format.printf "-? Iterator<Boolean> <//: Iterator<True> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Iterator", vm2)) (Instance("Iterator", vm1)))) in
     ()
   in
   ()
@@ -81,5 +98,5 @@ let () =
     (* test_mf_boolean (); *)
     (* test_number (); *)
     test_sample1 ();
-    Format.printf "--- ALL TESTS PASS ---"
+    Format.printf "--- ALL TESTS PASS ---\n"
   end
