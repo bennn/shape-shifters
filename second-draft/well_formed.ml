@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = false
+let wDEBUG = true
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -96,6 +96,7 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
     && (List.for_all (fun (Arg(tp,_)) -> type_ok ctx' tp) args)
   in
   let method_compliant (m:method_t) =
+    let () = Format.printf "[method_sigs_ok.compliant] '%s'\n" (string_of_method_t m) in
     if MethodSet.mem m inherited
     then subtype_method ctx m (MethodSet.find m inherited)
     else true
@@ -107,9 +108,12 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
 (* [methods_implemented ctx sats mthds] Check that each method in [sats] is matched
    by an implementation in [mthds]. *)
 and methods_implemented (ctx:context) (sats:MethodSet.t) (mthds:(cond_t * method_t) list) : bool =
-  let () = if wDEBUG then Format.printf "[methods_implemented] \n" in
+  let mthds' = filter_by_condition ctx mthds in
+  let () = if wDEBUG then Format.printf "[methods_implemented] comparing '%s' with '%s'\n"
+                                        (String.concat "; " (MethodSet.fold (fun x acc -> string_of_method_t x :: acc) sats []))
+                                        (String.concat "; " (List.map string_of_method_t mthds')) in
   let diff = MethodSet.diff sats
-                            (MethodSet.of_list (filter_by_condition ctx mthds)) in
+                            (MethodSet.of_list mthds') in
   MethodSet.is_empty diff
 (* [method_body_ok ctx (m,b)] Type-check the statement [b], make sure it
    conforms to the method signature [m]. *)

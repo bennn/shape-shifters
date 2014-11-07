@@ -23,14 +23,17 @@ let test_mf_boolean () =
 
 let test_sample1 () =
   let () = print_hdr "testing Sample1" in
+  let () = List.iter (fun x -> test (shape_ok Sample1.ctx x))     Sample1.shapes in
+  let () = List.iter (fun x -> test (interface_ok Sample1.ctx x)) Sample1.interfaces in
+  let () = List.iter (fun x -> test (class_ok Sample1.ctx x))     Sample1.classes in
   ()
 
 (*** RUN TESTS ***)
 let () =
   begin
-    test_object ();
-    test_boolean ();
-    test_mf_boolean ();
+    (* test_object (); *)
+    (* test_boolean (); *)
+    (* test_mf_boolean (); *)
     test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---"
   end
