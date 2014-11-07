@@ -11,9 +11,18 @@ let test_object  () =
 
 let test_boolean () =
   let () = print_hdr "testing Booleans" in
-  let () = test (interface_ok Boolean.ctx Boolean.i_boolean) in
-  let () = test (class_ok     Boolean.ctx Boolean.c_true) in
-  let () = test (class_ok     Boolean.ctx Boolean.c_false) in
+  let () = List.iter (fun x -> test (interface_ok Mf_boolean.ctx x)) Boolean.interfaces in
+  let () = List.iter (fun x -> test (class_ok Mf_boolean.ctx x))     Boolean.classes in
+  ()
+
+let test_mf_boolean () =
+  let () = print_hdr "testing malformed booleans" in
+  let () = List.iter (fun x -> test (not (interface_ok Mf_boolean.ctx x))) Mf_boolean.interfaces in
+  let () = List.iter (fun x -> test (not (class_ok Mf_boolean.ctx x)))     Mf_boolean.classes in
+  ()
+
+let test_sample1 () =
+  let () = print_hdr "testing Sample1" in
   ()
 
 (*** RUN TESTS ***)
@@ -21,5 +30,7 @@ let () =
   begin
     test_object ();
     test_boolean ();
+    test_mf_boolean ();
+    test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---"
   end

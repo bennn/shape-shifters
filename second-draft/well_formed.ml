@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = true
+let wDEBUG = false
 
 module MethodSet = Set.Make (struct
   type t = method_t

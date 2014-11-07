@@ -32,11 +32,20 @@ let c_false = Class ( "False"
                      ; (NoCond, (m_sig_not, Null))])
 
 let class_c =
-  StringMap.add "Boolean" (I i_boolean)
-    (StringMap.add "True" (C c_true)
-      (StringMap.add "False" (C c_false)
+  StringMap.add (name_of_inter_t i_boolean) (I i_boolean)
+    (StringMap.add (name_of_class_t c_true) (C c_true)
+      (StringMap.add (name_of_class_t c_false) (C c_false)
         StringMap.empty))
 let shape_c = StringMap.empty
 let var_c   = empty_c
 
 let ctx = context_init class_c shape_c var_c
+
+let classes = [
+  c_true
+; c_false
+]
+
+let interfaces = [
+  i_boolean
+]
