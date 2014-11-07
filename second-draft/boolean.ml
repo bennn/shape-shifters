@@ -39,4 +39,4 @@ let class_c =
 let shape_c = StringMap.empty
 let var_c   = empty_c
 
-let ctx = class_c, shape_c, var_c
+let ctx = context_init class_c shape_c var_c

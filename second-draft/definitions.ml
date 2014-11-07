@@ -66,6 +66,8 @@ let string_of_sig_t (vt:sig_t) : string =
   | C c -> string_of_class_t c
   | I i -> string_of_inter_t i
   end
+let name_of_shape_t (st:shape_t) : string =
+  string_of_shape_t st
 let name_of_class_t (ct:class_t) : string =
   string_of_class_t ct
 let name_of_inter_t (it:inter_t) : string =
@@ -77,3 +79,27 @@ let name_of_sig_t (vt:sig_t) : string =
 module StringMap   = Map.Make (String)
 type class_context = sig_t StringMap.t
 type shape_context = shape_t StringMap.t
+
+(* Context = signatures (types), shapes, and type vars *)
+type variance = Pos | Neg
+type context  = class_context
+               * shape_context
+               * (variance * (string -> (type_t * type_t)))
+let context_init (cc:class_context) (sc:shape_context) (varmap:(string -> (type_t * type_t))) =
+  (cc, sc, (Pos, varmap))
+let flip_variance (ctx:context) : context =
+  let (cc, sc, (vnc, varmap)) = ctx in
+  let vnc' = match vnc with | Pos -> Neg | Neg -> Pos in
+  (cc, sc, (vnc', varmap))
+let lookup_tau_i (ctx:context) (var:string) : type_t =
+  let (_,_,(vnc, vm)) = ctx in
+  begin match vnc with
+  | Pos -> fst (vm var)
+  | Neg -> snd (vm var)
+  end
+let lookup_tau_o (ctx:context) (var:string) : type_t =
+  let (_,_,(vnc, vm)) = ctx in
+  begin match vnc with
+  | Neg -> fst (vm var)
+  | Pos -> snd (vm var)
+  end

@@ -1,22 +1,17 @@
 open Definitions
 
-(* Context = signatures (types), shapes, and type vars *)
-type context = class_context
-               * shape_context
-               * (string -> (type_t * type_t))
-
-let cDEBUG = false
+let sDEBUG = false
 
 (* [update_vars vm ctx] update the var map in the context [ctx] to first look in [vm] *)
 let update_vars (vm:string -> (type_t * type_t)) (ctx:context) : context =
-  let class_c, shape_c, var_c = ctx in
+  let class_c, shape_c, (vnc, var_c) = ctx in
   let var_c' = fun v -> (try vm v with _ -> var_c v) in
-  (class_c, shape_c, var_c')
+  (class_c, shape_c, (vnc, var_c'))
 
 (* [inherits ctx t1 t2] Search valid parents of [t1] for the name of [t2].
    Validity determined by the context [t1]. *)
 let rec inherits (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
-  let () = if cDEBUG then Format.printf "[inherits] '%s' <:: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
+  let () = if sDEBUG then Format.printf "[inherits] '%s' <:: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   let class_c, _, _ = ctx in
   begin match t1 , t2 with
   | Instance (name1, varmap1) , Instance (name2, varmap2) ->
@@ -48,22 +43,21 @@ let rec inherits (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
 (* [condition_ok cond ctx] Check if the 'satisfies' condition [cond] holds
    in context [ctx]. *)
 and condition_ok (cond:cond_t) (ctx:context) : bool =
-  let () = if cDEBUG then Format.printf "[condition_ok] \n" in
-  let _, _, var_c = ctx in
+  let () = if sDEBUG then Format.printf "[condition_ok] \n" in
   begin match cond with
   | Sat (v, shape)
-  | SuperSat (v, shape) -> satisfies (snd (var_c v)) shape ctx
+  | SuperSat (v, shape) -> satisfies (lookup_tau_o ctx v) shape ctx
   | NoCond -> true
   end
 (* [satisfies tt shp ctx] Check if type [tt] is declared to satisfy shape [shp]
    in the current context [ctx]. *)
 and satisfies (tt:type_t) (shp:shape_t) (ctx:context) : bool =
-  let () = if cDEBUG then Format.printf "[satisfies] \n" in
-  let class_c, _, var_c = ctx in
+  let () = if sDEBUG then Format.printf "[satisfies] \n" in
+  let class_c, _, _ = ctx in
   begin match tt with
   | Bot | Top -> false
   | TVar v
-  | Super v -> satisfies (snd (var_c v)) shp ctx
+  | Super v -> satisfies (lookup_tau_o ctx v) shp ctx
   | Instance (name, vm') ->
      let shapes =
        begin match StringMap.find name class_c with
@@ -95,7 +89,7 @@ and shape_satisfies (shapes:(cond_t * shape_t) list) (shp:shape_t) (ctx:context)
    The function [subtype] depends on this: need the name and param name
    of the parent. *)
 let inherits_eq (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
-  let () = if cDEBUG then Format.printf "[inherits_eq] '%s' <::= '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
+  let () = if sDEBUG then Format.printf "[inherits_eq] '%s' <::= '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   let class_c, _, _ = ctx in
   begin match t1, t2 with
   | Instance (name1, varmap1), Instance (name2, varmap2) ->
@@ -106,8 +100,7 @@ let inherits_eq (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
   end
 
 let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
-  let () = if cDEBUG then Format.printf "[subtype] '%s' <: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
-  let _, _, var_c = ctx in
+  let () = if sDEBUG then Format.printf "[subtype] '%s' <: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   begin match t1, t2 with
   (* Easy cases: bot/top *)
   | Bot, _ -> true
@@ -116,14 +109,14 @@ let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
   | _, Bot -> false
   (* Resolve type variables *)
   | TVar v , _ ->
-     subtype ctx (snd (var_c v)) t2
+     subtype ctx (lookup_tau_o ctx v) t2
   | _, TVar v ->
-     subtype ctx t1 (snd (var_c v))
+     subtype ctx t1 (lookup_tau_o ctx v)
   (* supers are a little scary, take the lower bound. FOR NOW. *)
   | Super v , _ ->
-     subtype ctx (snd (var_c v)) t2
+     subtype ctx (lookup_tau_o ctx v) t2
   | _ , Super v ->
-     subtype ctx t1 (snd (var_c v))
+     subtype ctx t1 (lookup_tau_o ctx v)
   (* the real deal *)
   | Instance (name1, varmap1), Instance (name2, varmap2) ->
      begin match inherits_eq ctx t1 t2 with
@@ -135,16 +128,29 @@ let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
           | I (Interface (_,tvs,_,_,_)) -> tvs
           end
         in
+        let ctx1 = update_vars varmap1 ctx in (* TODO scared *)
+        let ctx2 = update_vars varmap2 ctx in
         List.fold_left
           (fun all_pass var -> all_pass && ( (* TODO scared about t_i t_o *)
-                                 let t_i  = fst (varmap2 var) in
-                                 let t_o  = snd (varmap2 var) in
-                                 let t_i' = fst (varmap2 var) in
-                                 let t_o' = snd (varmap2 var) in
+                                 let t_i   = lookup_tau_i ctx1 var in
+                                 let t_o   = lookup_tau_o ctx1 var in
+                                 let t_i'  = lookup_tau_i ctx2 var in
+                                 let t_o'  = lookup_tau_o ctx2 var in
                                  subtype ctx t_i' t_i && subtype ctx t_o t_o'))
           true tvars
      end
   end
 
+let rec for_all2 (f:'a -> 'b -> bool) (xs:'a list) (ys:'b list) : bool =
+  begin match xs , ys with
+  | [] , []         -> true
+  | h1::t1 , h2::t2 -> f h1 h2 && for_all2 f t1 t2
+  | _ , _           -> false
+  end
 let rec subtype_method (ctx:context) (m1:method_t) (m2:method_t) : bool =
-  failwith "nope"
+  let Method (ret1, _, args1) = m1 in
+  let Method (ret2, _, args2) = m2 in
+  let ctx' = flip_variance ctx in
+  subtype ctx ret1 ret2
+  && for_all2 (fun (Arg(_,n1)) (Arg(_,n2)) -> n1 = n2) args1 args2
+  && for_all2 (fun (Arg(t1,_)) (Arg(t2,_)) -> subtype ctx' t2 t1) args1 args2
