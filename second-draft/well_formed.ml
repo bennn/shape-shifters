@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = true
+let wDEBUG = false
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -96,7 +96,7 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
     && (List.for_all (fun (Arg(tp,_)) -> type_ok ctx' tp) args)
   in
   let method_compliant (m:method_t) =
-    let () = Format.printf "[method_sigs_ok.compliant] '%s'\n" (string_of_method_t m) in
+    let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] '%s'\n" (string_of_method_t m) in
     if MethodSet.mem m inherited
     then subtype_method ctx m (MethodSet.find m inherited)
     else true

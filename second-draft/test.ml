@@ -11,8 +11,15 @@ let test_object  () =
 
 let test_boolean () =
   let () = print_hdr "testing Booleans" in
-  let () = List.iter (fun x -> test (interface_ok Mf_boolean.ctx x)) Boolean.interfaces in
-  let () = List.iter (fun x -> test (class_ok Mf_boolean.ctx x))     Boolean.classes in
+  let () = List.iter (fun x -> test (interface_ok Boolean.ctx x)) Boolean.interfaces in
+  let () = List.iter (fun x -> test (class_ok Boolean.ctx x))     Boolean.classes in
+  ()
+
+let test_number () =
+  let () = print_hdr "testing Numbers" in
+  let () = List.iter (fun x -> test (shape_ok Number.ctx x))     Number.shapes in
+  let () = List.iter (fun x -> test (interface_ok Number.ctx x)) Number.interfaces in
+  let () = List.iter (fun x -> test (class_ok Number.ctx x))     Number.classes in
   ()
 
 let test_mf_boolean () =
@@ -34,6 +41,7 @@ let () =
     (* test_object (); *)
     (* test_boolean (); *)
     (* test_mf_boolean (); *)
+    (* test_number (); *)
     test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---"
   end
