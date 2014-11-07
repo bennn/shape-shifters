@@ -1,7 +1,7 @@
 (* ARG = type , name *)
 type arg_t    = Arg of type_t * string
 (* CONDITION = TVAR satisfies SHAPE | super TVAR satisfies SHAPE | NOTHING *)
-and  cond_t   = Sat of string * shape_t | SuperSat of string * shape_t | Nothing
+and  cond_t   = Sat of string * shape_t | SuperSat of string * shape_t | NoCond
 (* SHAPE = name , extends (shapes) , methods *)
 and  shape_t  = Shape of string * ((cond_t * shape_t) list) * ((cond_t * method_t) list)
 (* METHOD = return_type , name , args *)
@@ -42,7 +42,7 @@ let string_of_cond_t (ct:cond_t) : string =
   begin match ct with
   | Sat (var, shape) -> Format.sprintf "[[%s SATISFIES %s]]" var (string_of_shape_t shape)
   | SuperSat (var, shape) -> Format.sprintf "[[SUPER %s SATISFIES %s]]" var (string_of_shape_t shape)
-  | Nothing -> "[[nil]]"
+  | NoCond -> "[[nil]]"
   end
 let string_of_method_t (md:method_t) : string =
   let Method (_, name, _) = md in

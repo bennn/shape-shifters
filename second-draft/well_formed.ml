@@ -105,17 +105,20 @@ and method_body_ok (ctx:context) ((mthd,body):method_t * stmt_t) : bool =
   begin match body with
   | Null -> true
   end
-(* [type_ok ?sel ctx tt] Check that the type [tt] is valid in context [ctx].
-   I think this is just 'are all variables bound?' but idk... TODO *)
-and type_ok ?(sel=snd) (ctx:context) (tt:type_t) : bool =
-  let _ = sel in (* TODO !!! use the selector, flip variance! *)
-  begin match tt with
-  | Top | Bot -> true
-  | TVar v | Super v -> param_ok ctx v
-  | Instance(name, _) -> true (* TODO keep the var map? yo... idk *)
-  end
 and sig_ok (ctx:context) (st:sig_t) : bool =
   begin match st with
   | C ct -> class_ok ctx ct
   | I it -> interface_ok ctx it
+  end
+(* [type_ok ?sel ctx tt] Check that the type [tt] is valid in context [ctx].
+   I think this is just 'are all variables bound?' but idk... TODO *)
+and type_ok ?(sel=snd) (ctx:context) (tt:type_t) : bool =
+  let _ = sel in (* TODO !!! use the selector, flip variance! *)
+  let class_c, _, _ = ctx in
+  begin match tt with
+  | Top | Bot -> true
+  | TVar v | Super v -> param_ok ctx v
+  | Instance(name, vm) ->
+     let ctx' = update_vars vm ctx in
+     sig_ok ctx' (StringMap.find name class_c)
   end

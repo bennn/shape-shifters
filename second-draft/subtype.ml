@@ -53,7 +53,7 @@ and condition_ok (cond:cond_t) (ctx:context) : bool =
   begin match cond with
   | Sat (v, shape)
   | SuperSat (v, shape) -> satisfies (snd (var_c v)) shape ctx
-  | Nothing -> true
+  | NoCond -> true
   end
 (* [satisfies tt shp ctx] Check if type [tt] is declared to satisfy shape [shp]
    in the current context [ctx]. *)
