@@ -103,11 +103,6 @@ let inherits_eq (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
 let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
   let () = if sDEBUG then Format.printf "[subtype] '%s' <: '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   begin match t1, t2 with
-  (* Easy cases: bot/top *)
-  | Bot, _ -> true
-  | _, Top -> true
-  | Top, _ -> false
-  | _, Bot -> false
   (* Resolve type variables *)
   | TVar v , _ ->
      subtype ctx (lookup_tau_o ctx v) t2
@@ -118,6 +113,11 @@ let rec subtype (ctx:context) (t1:type_t) (t2:type_t) : bool =
      subtype ctx (lookup_tau_o ctx v) t2
   | _ , Super v ->
      subtype ctx t1 (lookup_tau_o ctx v)
+  (* Easy cases: bot/top *)
+  | Bot, _ -> true
+  | _, Top -> true
+  | Top, _ -> false
+  | _, Bot -> false
   (* the real deal *)
   | Instance (name1, varmap1), Instance (name2, varmap2) ->
      begin match inherits_eq ctx t1 t2 with
@@ -149,6 +149,7 @@ let rec for_all2 (f:'a -> 'b -> bool) (xs:'a list) (ys:'b list) : bool =
   | _ , _           -> false
   end
 let rec subtype_method (ctx:context) (m1:method_t) (m2:method_t) : bool =
+  let () = if sDEBUG then Format.printf "[subtype_method] %s <: %s\n" (string_of_method_t m1) (string_of_method_t m2) in
   let Method (ret1, _, args1) = m1 in
   let Method (ret2, _, args2) = m2 in
   let ctx' = flip_variance ctx in

@@ -128,14 +128,70 @@ let i_set =
                                     , "that")]))]
             )
 
+let c_array_param = "Array_E"
+let c_array_mf1 = Class ( "ArrayMF1"
+                    , [c_array_param]
+                    , []
+                    , [(NoCond, i_list)]
+                    , [ (Sat(c_array_param, s_equatable), s_equatable)
+                      ; (Sat(c_array_param, s_cloneable), s_cloneable)
+                      ; (Sat(c_array_param, s_addable)  , s_addable)]
+                    , [])
+let c_array =
+  let super_vm = varmap_addvar empty_varmap c_array_param (Super(i_list_param), Super(i_list_param)) in
+  let tSuper = Instance("Array", super_vm) in
+  Class ( "Array"
+        , [c_array_param]
+        , []
+        , [(NoCond, i_list)]
+        , [ (Sat(c_array_param, s_equatable), s_equatable)
+          ; (Sat(c_array_param, s_cloneable), s_cloneable)
+          ; (Sat(c_array_param, s_addable)  , s_addable)]
+        , [ (NoCond
+            , (Method( TVar c_array_param
+                     , "get"
+                     , [Arg(Instance("Integer", empty_varmap), "index")])
+              , Null))
+          ; ( NoCond
+            , (Method( Bot
+                     , "set"
+                     , [ Arg(Instance("Integer", empty_varmap), "index")
+                       ; Arg(TVar c_array_param               , "elem")])
+              , Null))
+          ; ( NoCond
+            , (Method( Instance("Integer", empty_varmap)
+                     , "length"
+                     , [])
+              , Null))
+          ; ( NoCond
+            , (Method( Instance("Iterator", varmap_addvar empty_varmap i_iterator_param   (Bot, TVar c_array_param))
+                     , "getIterator"
+                     , [])
+              , Null))
+          ; ( SuperSat(c_array_param, s_cloneable)
+            , (Method( tSuper
+                     , "clone"
+                     , [])
+              , Null))
+          ; ( SuperSat(c_array_param, s_addable)
+            , (Method( tSuper
+                     , "plus"
+                     , [Arg( Instance("Indexed",
+                                      varmap_addvar empty_varmap i_indexed_param (Bot, TVar c_array_param))
+                           , "that")])
+              , Null))
+        ])
+
+
 let class_c =
-  StringMap.add (name_of_inter_t i_set) (I i_set)
+  StringMap.add (name_of_class_t c_array) (C c_array)
+  (StringMap.add (name_of_inter_t i_set) (I i_set)
   (StringMap.add (name_of_inter_t i_list) (I i_list)
   (StringMap.add (name_of_inter_t i_indexed) (I i_indexed)
   (StringMap.add (name_of_inter_t i_iterable) (I i_iterable)
   (StringMap.add (name_of_inter_t i_iterator) (I i_iterator)
   (StringMap.add (name_of_inter_t i_container) (I i_container)
-    (merge_disjoint Number.class_c Boolean.class_c))))))
+    (merge_disjoint Number.class_c Boolean.class_c)))))))
 
 let ctx0 = context_init class_c
                         StringMap.empty
@@ -154,6 +210,16 @@ let inter_ctx =
                StringMap.empty
                inter_varmap
 
+let c_array_vm =
+  let vm1 = varmap_addvar empty_varmap i_iterator_param  (Bot, TVar c_array_param) in
+  let vm2 = varmap_addvar vm1          i_indexed_param   (Bot, TVar c_array_param) in
+  let vm3 = varmap_addvar vm2          i_list_param      (Bot, TVar c_array_param) in
+  let vm4 = varmap_addvar vm3          i_iterable_param  (Bot, TVar c_array_param) in
+  vm4
+let c_array_ctx =
+  context_init class_c
+               StringMap.empty
+               (varmap_addvar c_array_vm c_array_param (Top, Top))
 
 let shapes = [
   s_equatable
@@ -162,7 +228,6 @@ let shapes = [
 ; s_hashable
 ; s_addable
 ]
-
 let interfaces = [
   i_container
 ; i_iterator
@@ -171,6 +236,9 @@ let interfaces = [
 ; i_list
 ; i_set
 ]
-
-(* let classes = [ *)
-(* ] *)
+let classes = [
+  c_array
+]
+let malformed_classes = [
+  c_array_mf1
+]
