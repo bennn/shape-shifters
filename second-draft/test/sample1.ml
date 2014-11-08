@@ -77,10 +77,65 @@ let i_indexed = Interface ( "Indexed"
                                             , "get"
                                             , [ Arg( Instance("Integer", empty_varmap), "index")]))])
 
+let i_list_param = "List_E"
+let i_list_vm =
+  let vm1 = varmap_addvar empty_varmap i_indexed_param   (Bot, TVar i_list_param) in
+  let vm2 = varmap_addvar vm1          i_container_param (TVar i_list_param, Top) in
+  vm2
+let i_list =
+  (* Varmap for List<super E> *)
+  let super_vm = varmap_addvar i_list_vm i_list_param (Bot, Super(i_list_param)) in
+  let tSuper = Instance("List", super_vm) in
+  Interface ( "List"
+            , [i_list_param]
+            , [ (NoCond, i_indexed)
+              ; (Sat(i_list_param, s_equatable)
+                , i_container)]
+            , [ (Sat(i_list_param, s_equatable)
+                , s_equatable)
+              ; (Sat(i_list_param, s_cloneable)
+                , s_cloneable)
+              ; (Sat(i_list_param, s_addable)
+                , s_addable)]
+            , [( SuperSat(i_list_param, s_equatable)
+               , Method( Instance("Boolean", empty_varmap)
+                       , "equals"
+                       , [Arg( tSuper, "that")]))
+              ; ( SuperSat(i_list_param, s_cloneable)
+                , Method( tSuper
+                        , "clone"
+                        , []))
+              ; ( SuperSat(i_list_param, s_addable)
+                , Method( tSuper
+                        , "plus"
+                        , [Arg( tSuper, "that")]))
+            ])
+
+let i_set_param = "Set_E"
+let i_set_vm =
+  let vm1 = varmap_addvar empty_varmap i_indexed_param   (Bot, TVar i_set_param) in
+  let vm2 = varmap_addvar vm1          i_container_param (TVar i_set_param, Top) in
+  vm2
+let i_set =
+  Interface ( "Set"
+            , [i_set_param]
+            , [( NoCond, i_iterable)
+              ;( NoCond, i_container)]
+            , [(NoCond, s_equatable)]
+            , [(NoCond, Method( Instance("Boolean", empty_varmap)
+                              , "equals"
+                              , [Arg( Instance("Set", empty_varmap)
+                                    , "that")]))]
+            )
+
 let class_c =
-  StringMap.add (name_of_inter_t i_iterator) (I i_iterator)
+  StringMap.add (name_of_inter_t i_set) (I i_set)
+  (StringMap.add (name_of_inter_t i_list) (I i_list)
+  (StringMap.add (name_of_inter_t i_indexed) (I i_indexed)
+  (StringMap.add (name_of_inter_t i_iterable) (I i_iterable)
+  (StringMap.add (name_of_inter_t i_iterator) (I i_iterator)
   (StringMap.add (name_of_inter_t i_container) (I i_container)
-    (merge_disjoint Number.class_c Boolean.class_c))
+    (merge_disjoint Number.class_c Boolean.class_c))))))
 
 let ctx0 = context_init class_c
                         StringMap.empty
@@ -91,7 +146,9 @@ let inter_varmap =
   let vm2 = varmap_addvar vm1          i_iterator_param  (Top, Top) in
   let vm3 = varmap_addvar vm2          i_iterable_param  (Top, Top) in
   let vm4 = varmap_addvar vm3          i_indexed_param   (Top, Top) in
-  vm4
+  let vm5 = varmap_addvar vm4          i_list_param      (Top, Top) in
+  let vm6 = varmap_addvar vm5          i_set_param       (Top, Top) in
+  vm6
 let inter_ctx =
   context_init class_c
                StringMap.empty
@@ -111,6 +168,8 @@ let interfaces = [
 ; i_iterator
 ; i_iterable
 ; i_indexed
+; i_list
+; i_set
 ]
 
 (* let classes = [ *)
