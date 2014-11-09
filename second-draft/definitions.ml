@@ -109,3 +109,6 @@ let lookup_tau_o (ctx:context) (var:string) : type_t =
   | Neg -> fst (vm var)
   | Pos -> snd (vm var)
   end
+let lookup_class (ctx:context) (name:string) : sig_t =
+  let (cc,_,_) = ctx in
+  StringMap.find name cc

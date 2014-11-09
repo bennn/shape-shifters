@@ -39,10 +39,8 @@ let test_sample1 () =
     List.iter (fun x -> let () = Format.printf "-? well-formed %s" (string_of_inter_t x) in
                test (interface_ok Sample1.inter_ctx x)) Sample1.interfaces
   in
-  let () =
-    List.iter (fun x -> let () = Format.printf "-? well-formed %s" (string_of_class_t x) in
-               test (class_ok Sample1.c_array_ctx x)) Sample1.classes
-  in
+  let () = test (class_ok Sample1.c_array_ctx Sample1.c_array) in
+  let () = test (class_ok Sample1.c_string_ctx Sample1.c_string) in
   let () = print_subhdr "iContainer" in
   let () = (* container top <: container bot && container bot </: container top *)
     let vm1 = varmap_addvar empty_varmap
@@ -194,44 +192,59 @@ let test_sample1 () =
     ()
   in
   let () = print_subhdr "cArray" in
-  let vm1 = varmap_addvar Sample1.c_array_vm
-                          Sample1.c_array_param
-                          (Instance("Boolean", empty_varmap), Instance("Boolean", empty_varmap))
-  and vm2 = varmap_addvar Sample1.c_array_vm
-                          Sample1.c_array_param
-                          (Top, Top)
-  and vm3 = varmap_addvar Sample1.c_array_vm
-                          Sample1.c_array_param
-                          (Bot, Bot)
+  let () =
+    let vm1 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Instance("Boolean", empty_varmap), Instance("Boolean", empty_varmap))
+    and vm2 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Top, Top)
+    and vm3 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Bot, Bot)
+    in
+    let vm4 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Instance("Array", vm1), Instance("Array", vm1))
+    and vm5 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Instance("Array", vm2), Instance("Array", vm2))
+    in
+    let vm6 = varmap_addvar Sample1.c_array_vm
+                            Sample1.c_array_param
+                            (Instance("String", empty_varmap), Instance("String", empty_varmap))
+    in
+    let () = Format.printf "-? Array<Boolean> <//: Array<Top> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm1)) (Instance("Array", vm2)))) in
+    let () = Format.printf "-? Array<Boolean> <//: Array<True> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm2)) (Instance("Array", vm1)))) in
+    let () = Format.printf "-? Array<Boolean> <: Array<Boolean> " in
+    let () = test (subtype Sample1.ctx0 (Instance("Array", vm1)) (Instance("Array", vm1))) in
+    let () = Format.printf "-? Array<Bot> <: Array<Bot> " in
+    let () = test (subtype Sample1.ctx0 (Instance("Array", vm3)) (Instance("Array", vm3))) in
+    let () = Format.printf "-? Array<Array<Boolean>> <//: Array<Array<Top>> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm5)))) in
+    let () = Format.printf "-? Array<Array<Top>> <//: Array<Array<Boolean>> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm5)) (Instance("Array", vm4)))) in
+    let () = Format.printf "-? Array<Array<Boolean>> <//: Array<Top> " in
+    let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm2)))) in
+    let () = Format.printf "-? Array<Array<Boolean>> <: Array<Array<Boolean>> " in
+    let () = test (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm4))) in
+    let () = Format.printf "-? method names of Array<Boolean> and Array<Top> are the same" in
+    let () = test (same_method_names Sample1.ctx0 (Instance("Array", vm1)) (Instance("Array", vm2))) in
+    let () = Format.printf "-? method names of Array<Bot> and Array<Top> are the same" in
+    let () = test (same_method_names Sample1.ctx0 (Instance("Array", vm3)) (Instance("Array", vm2))) in
+    let () = Format.printf "-? method names of Array<Bot> and Array<Boolean> are the same" in
+    let () = test (same_method_names Sample1.ctx0 (Instance("Array", vm3)) (Instance("Array", vm1))) in
+    let () = Format.printf "-? method names of Array<String> and Array<Boolean> are NOT the same" in
+    let () = test (not (same_method_names Sample1.ctx0 (Instance("Array", vm6)) (Instance("Array", vm1)))) in
+    let () = Format.printf "-? method names of Array<String> and Array<Top> are NOT the same" in
+    let () = test (not (same_method_names Sample1.ctx0 (Instance("Array", vm6)) (Instance("Array", vm2)))) in
+    let () = Format.printf "-? method names of Array<String> and Array<Bot> are the same" in
+    let () = test (not (same_method_names Sample1.ctx0 (Instance("Array", vm6)) (Instance("Array", vm3)))) in
+    ()
   in
-  let vm4 = varmap_addvar Sample1.c_array_vm
-                          Sample1.c_array_param
-                          (Instance("Array", vm1), Instance("Array", vm1))
-  and vm5 = varmap_addvar Sample1.c_array_vm
-                          Sample1.c_array_param
-                          (Instance("Array", vm2), Instance("Array", vm2))
-  in
-  let () = Format.printf "-? Array<Boolean> <//: Array<Top> " in
-  let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm1)) (Instance("Array", vm2)))) in
-  let () = Format.printf "-? Array<Boolean> <//: Array<True> " in
-  let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm2)) (Instance("Array", vm1)))) in
-  let () = Format.printf "-? Array<Boolean> <: Array<Boolean> " in
-  let () = test (subtype Sample1.ctx0 (Instance("Array", vm1)) (Instance("Array", vm1))) in
-  let () = Format.printf "-? Array<Bot> <: Array<Bot> " in
-  let () = test (subtype Sample1.ctx0 (Instance("Array", vm3)) (Instance("Array", vm3))) in
-  let () = Format.printf "-? Array<Array<Boolean>> <//: Array<Array<Top>> " in
-  let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm5)))) in
-  let () = Format.printf "-? Array<Array<Top>> <//: Array<Array<Boolean>> " in
-  let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm5)) (Instance("Array", vm4)))) in
-  let () = Format.printf "-? Array<Array<Boolean>> <//: Array<Top> " in
-  let () = test (not (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm2)))) in
-  let () = Format.printf "-? Array<Array<Boolean>> <: Array<Array<Boolean>> " in
-  let () = test (subtype Sample1.ctx0 (Instance("Array", vm4)) (Instance("Array", vm4))) in
   ()
-
-(* let test_collections () = *)
-(*   let () = print_hdr "testing java.util.Collections" in *)
-(*   () *)
 
 (*** RUN TESTS ***)
 let () =
@@ -240,7 +253,7 @@ let () =
     (* test_boolean (); *)
     (* test_mf_boolean (); *)
     (* test_number (); *)
-    test_sample1 ();
-    (* test_collections (); *)
+    (* test_sample1 (); *)
+    Java.test_collections ();
     Format.printf "--- ALL TESTS PASS ---\n"
   end

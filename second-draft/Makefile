@@ -4,8 +4,8 @@ all:
 	ocamlc definitions.ml subtype.ml well_formed.ml
 
 test:
-	ocamlbuild test/test.d.byte
-	./test.d.byte
+	ocamlbuild test/runall.d.byte
+	./runall.d.byte
 
 clean:
 	ocamlbuild -clean 

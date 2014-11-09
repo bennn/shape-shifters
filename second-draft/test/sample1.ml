@@ -182,16 +182,37 @@ let c_array =
               , Null))
         ])
 
+let c_string = Class ( "String"
+                     , []
+                     , []
+                     , [] (*interface *)
+                     , [ (NoCond, s_equatable)
+                       ; (NoCond, s_cloneable)
+                       ; (NoCond, s_addable)]
+                     , [ (NoCond, (Method( Instance("Boolean", empty_varmap)
+                                        , "equals"
+                                        , [Arg(Instance("String", empty_varmap), "that")])
+                                  , Null))
+                       ; (NoCond, (Method( Instance("String", empty_varmap)
+                                        , "clone"
+                                        , [])
+                                  , Null))
+                       ; (NoCond, (Method( Instance("String", empty_varmap)
+                                        , "plus"
+                                        , [Arg(Instance("String", empty_varmap) , "that")])
+                                  , Null))]
+                     )
 
 let class_c =
-  StringMap.add (name_of_class_t c_array) (C c_array)
+  StringMap.add (name_of_class_t c_string) (C c_string)
+  (StringMap.add (name_of_class_t c_array) (C c_array)
   (StringMap.add (name_of_inter_t i_set) (I i_set)
   (StringMap.add (name_of_inter_t i_list) (I i_list)
   (StringMap.add (name_of_inter_t i_indexed) (I i_indexed)
   (StringMap.add (name_of_inter_t i_iterable) (I i_iterable)
   (StringMap.add (name_of_inter_t i_iterator) (I i_iterator)
   (StringMap.add (name_of_inter_t i_container) (I i_container)
-    (merge_disjoint Number.class_c Boolean.class_c)))))))
+    (merge_disjoint Number.class_c Boolean.class_c))))))))
 
 let ctx0 = context_init class_c
                         StringMap.empty
@@ -221,6 +242,14 @@ let c_array_ctx =
                StringMap.empty
                (varmap_addvar c_array_vm c_array_param (Top, Top))
 
+let c_string_vm =
+  let vm1 = varmap_addvar empty_varmap "THIS" (Bot, (Instance("String", empty_varmap))) in
+  vm1
+let c_string_ctx =
+  context_init class_c
+               StringMap.empty
+               c_string_vm
+
 let shapes = [
   s_equatable
 ; s_cloneable
@@ -238,6 +267,7 @@ let interfaces = [
 ]
 let classes = [
   c_array
+; c_string
 ]
 let malformed_classes = [
   c_array_mf1

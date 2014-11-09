@@ -138,3 +138,20 @@ and type_ok (ctx:context) (tt:type_t) : bool =
   | TVar v | Super v -> param_ok ctx v
   | Instance(name, vm) -> StringMap.mem name class_c
   end
+
+let rec method_names (ctx:context) (tt:type_t) : string list =
+  let () = if wDEBUG then Format.printf "[method_names] '%s'\n" (string_of_type_t tt) in
+  begin match tt with
+  | Top -> []
+  | Bot -> ["Bot=>All"]
+  | TVar v | Super v -> method_names ctx (lookup_tau_o ctx v)
+  | Instance(name, vm) ->
+     let ms =
+       begin match lookup_class ctx name with
+       | C (Class(_,_,_,_,_,ms)) -> List.map (fun (a,(b,c)) -> (a,b)) ms
+       | I (Interface(_,_,_,_,ms)) -> ms
+       end
+     in
+     let ctx' = update_vars vm ctx in
+     List.map string_of_method_t (filter_by_condition ctx' ms)
+  end
