@@ -1,0 +1,2 @@
+* worries
+  - function invariant
