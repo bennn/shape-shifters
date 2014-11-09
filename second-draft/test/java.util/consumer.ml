@@ -4,11 +4,6 @@ open Test_utils
 
 let i_consumer_param = "CONSUMER_PARAM"
 let i_consumer =
-  (* let rConsumer = *)
-  (*   Instance("Consumer", varmap_addvar empty_varmap *)
-  (*                                      i_consumer_param *)
-  (*                                      (TVar i_consumer_param, Top)) *)
-  (* in *)
   Interface ( "Consumer"
             , [i_consumer_param]
             , [], []
