@@ -4,3 +4,4 @@
 \#*
 *.out
 _build
+*.d.byte
