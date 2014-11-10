@@ -14,8 +14,12 @@ end)
 let rec filter_by_condition (ctx:context) (guarded_exprs:(cond_t * 'a) list) : 'a list =
   begin match guarded_exprs with
   | [] -> []
-  | (cond,x)::tl when condition_ok cond ctx -> x :: filter_by_condition ctx tl
-  | _::tl -> filter_by_condition ctx tl
+  | (cond,x)::tl when condition_ok cond ctx ->
+     let () = if wDEBUG then Format.printf "[filter_by_condition] condition '%s' passed\n" (string_of_cond_t cond) in
+     x :: filter_by_condition ctx tl
+  | _::tl ->
+     let () = if wDEBUG then Format.printf "[filter_by_condition] condition '%s' failed\n" (string_of_cond_t (fst (List.hd guarded_exprs))) in
+     filter_by_condition ctx tl
   end
 
 let union_fold f xs =
@@ -79,17 +83,28 @@ let rec lookup_method (ctx:context) (st:sig_t) (mname:string) : method_t option 
 (* param ok, class ok, interface ok, ...... *)
 let rec class_ok (ctx:context) (ct:class_t) : bool =
   let () = if wDEBUG then Format.printf "[class_ok] '%s'\n" (string_of_class_t ct) in
-  let Class(_, params, extends, impls, sats, mthds) = ct in
+  let Class(name, params, extends, impls, sats, mthds) = ct in
+  let ctx = (* set THIS *)
+    let (_,_,(_,vm)) = ctx in
+    context_addvar ctx name (Instance(name, vm), Instance(name, vm))
+  in
   let method_sigs = List.map (fun (c,(m,b)) -> (c,m)) mthds in
   (List.for_all (param_ok ctx) params)
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' params ok\n" (string_of_class_t ct); true)
   && (List.for_all (class_ok ctx)       (filter_by_condition ctx extends))
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' classs ok\n" (string_of_class_t ct); true)
   && (List.for_all (interface_ok ctx)   (filter_by_condition ctx impls))
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' inters ok\n" (string_of_class_t ct); true)
   && (List.for_all (shape_ok ctx)       (filter_by_condition ctx sats))
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' shapes ok\n" (string_of_class_t ct); true)
   && (List.for_all (method_body_ok ctx) (filter_by_condition ctx mthds))
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' bodies ok\n" (string_of_class_t ct); true)
   && (method_sigs_ok ctx (inherited_methods ctx extends impls sats) method_sigs)
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' sigs ok\n" (string_of_class_t ct); true)
   && (let to_implement = MethodSet.diff (inherited_methods ctx [] impls sats)
                                         (inherited_methods ctx extends [] [])
       in methods_implemented ctx to_implement method_sigs)
+  && (if wDEBUG then Format.printf "[class_ok] class '%s' approved\n" (string_of_class_t ct); true)
 (* [param_ok ctx param] Check that the parameter [param]
    is bound in the current context [ctx]. *)
 and param_ok (ctx:context) (param:string) : bool =
@@ -99,7 +114,12 @@ and param_ok (ctx:context) (param:string) : bool =
 (* [interface_ok ctx it] Check that the interface [it] is valid in context [ctx]. *)
 and interface_ok (ctx:context) (it:inter_t) : bool =
   let () = if wDEBUG then Format.printf "[interface_ok] '%s'\n" (string_of_inter_t it) in
-  let Interface(_, params, impls, sats, mthds) = it in
+  let Interface(name, params, impls, sats, mthds) = it in
+  let ctx = (* set THIS *)
+    let (_,_,(_,vm)) = ctx in
+    let () = if wDEBUG then Format.printf "[interface_ok] BINDING THIS!!!!!!!!\n" in
+    context_addvar ctx name (Instance(name, vm), Instance(name, vm))
+  in
   (List.for_all (param_ok ctx) params)
   && (List.for_all (interface_ok ctx) (filter_by_condition ctx impls))
   && (List.for_all (shape_ok ctx)     (filter_by_condition ctx sats))
@@ -107,7 +127,11 @@ and interface_ok (ctx:context) (it:inter_t) : bool =
 (* [shape_ok ctx st] Check that a shape [st] is valid in context [ctx]. *)
 and shape_ok (ctx:context) (st:shape_t) : bool =
   let () = if wDEBUG then Format.printf "[shape_ok] '%s'\n" (string_of_shape_t st) in
-  let Shape(_, sats, mthds) = st in
+  let Shape(name, sats, mthds) = st in
+  let ctx = (* set THIS *)
+    let (_,_,(_,vm)) = ctx in
+    context_addvar ctx name (Instance(name, vm), Instance(name, vm))
+  in
   (List.for_all (shape_ok ctx) (filter_by_condition ctx sats))
   && method_sigs_ok ctx (inherited_methods ctx [] [] sats) mthds
 (* [method_sigs_ok ctx inhr mthds] Check the list of methods [mthds].
@@ -130,13 +154,15 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
   let method_compliant (m:method_t) =
     let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] '%s'\n" (string_of_method_t m) in
     if MethodSet.mem m inherited
-    then subtype_method ctx m (MethodSet.find m inherited)
+    then let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] is method '%s' a subtype of method '%s'???\n" (string_of_method_t m) (string_of_method_t (MethodSet.find m inherited)) in
+      subtype_method ctx m (MethodSet.find m inherited)
     else true
   in
   no_duplicates
   (* condition fails or method well-formed *)
   && List.for_all (fun m -> (method_type_ok m && method_compliant m))
                   (filter_by_condition ctx mthds)
+  && (if wDEBUG then Format.printf "[method_sigs_ok] ALL PASS\n"; true)
 (* [methods_implemented ctx todo mthds] Check that each method in [todo] is matched
    by an implementation in [mthds]. *)
 and methods_implemented (ctx:context) (to_implement:MethodSet.t) (mthds:(cond_t * method_t) list) : bool =
@@ -147,6 +173,7 @@ and methods_implemented (ctx:context) (to_implement:MethodSet.t) (mthds:(cond_t 
   let diff = MethodSet.diff to_implement
                             (MethodSet.of_list mthds') in
   MethodSet.is_empty diff
+  && (if wDEBUG then Format.printf "[methods_implemented] OKAY\n"; true)
 (* [method_body_ok ctx (m,b)] Type-check the statement [b], make sure it
    conforms to the method signature [m]. As of (2014-11-09), just make sure
    the expression type matches the return type. *)
