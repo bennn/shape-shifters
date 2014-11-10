@@ -1,6 +1,6 @@
 open Definitions
 
-let sDEBUG = false
+let sDEBUG = true
 
 (* [update_vars vm ctx] update the var map in the context [ctx] to first look in [vm] *)
 let update_vars (vm:string -> (type_t * type_t)) (ctx:context) : context =
@@ -44,7 +44,7 @@ let rec inherits (ctx:context) (t1:type_t) (t2:type_t) : sig_t option =
 (* [condition_ok cond ctx] Check if the 'satisfies' condition [cond] holds
    in context [ctx]. *)
 and condition_ok (cond:cond_t) (ctx:context) : bool =
-  let () = if sDEBUG then Format.printf "[condition_ok] \n" in
+  let () = if sDEBUG then Format.printf "[condition_ok] checking %s\n" (string_of_cond_t cond) in
   begin match cond with
   | Sat (v, shape)
   | SuperSat (v, shape) -> satisfies (lookup_tau_o ctx v) shape ctx
@@ -53,12 +53,13 @@ and condition_ok (cond:cond_t) (ctx:context) : bool =
 (* [satisfies tt shp ctx] Check if type [tt] is declared to satisfy shape [shp]
    in the current context [ctx]. *)
 and satisfies (tt:type_t) (shp:shape_t) (ctx:context) : bool =
-  let () = if sDEBUG then Format.printf "[satisfies] \n" in
+  let () = if sDEBUG then Format.printf "[satisfies] %s <~ %s\n" (string_of_type_t tt) (string_of_shape_t shp) in
   let class_c, _, _ = ctx in
   begin match tt with
-  | Bot | Top -> false
+  | Bot -> true
+  | Top -> false
   | TVar v
-  | Super v -> satisfies (lookup_tau_o ctx v) shp ctx
+  | Super v -> if v = "List_E" then failwith "booo" else satisfies (lookup_tau_o ctx v) shp ctx
   | Instance (name, vm') ->
      let shapes =
        begin match StringMap.find name class_c with
@@ -149,10 +150,13 @@ let rec for_all2 (f:'a -> 'b -> bool) (xs:'a list) (ys:'b list) : bool =
   | _ , _           -> false
   end
 let rec subtype_method (ctx:context) (m1:method_t) (m2:method_t) : bool =
-  let () = if sDEBUG then Format.printf "[subtype_method] %s <: %s\n" (string_of_method_t m1) (string_of_method_t m2) in
+  let () = if sDEBUG then Format.printf "[subtype_method] '%s' <: '%s'\n" (string_of_method_t m1) (string_of_method_t m2) in
   let Method (ret1, _, args1) = m1 in
   let Method (ret2, _, args2) = m2 in
   let ctx' = flip_variance ctx in
   subtype ctx ret1 ret2
+  && (if sDEBUG then Format.printf "[subtype_method] return types ok!\n"; true)
   && for_all2 (fun (Arg(_,n1)) (Arg(_,n2)) -> n1 = n2) args1 args2
+  && (if sDEBUG then Format.printf "[subtype_method] arg lengths ok!\n"; true)
   && for_all2 (fun (Arg(t1,_)) (Arg(t2,_)) -> subtype ctx' t2 t1) args1 args2
+  && (if sDEBUG then Format.printf "[subtype_method] arg subtypes ok!\n"; true)
