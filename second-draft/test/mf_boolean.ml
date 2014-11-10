@@ -17,8 +17,8 @@ let c2 = Class ( "MF2"
                    , [ (NoCond, (Method( Top
                                        , "and"
                                        , [Arg(Instance("Boolean", empty_varmap), "that")])
-                                , Null))
-                     ; (NoCond, (Boolean.m_sig_not, Null))])
+                                , Return Null))
+                     ; (NoCond, (Boolean.m_sig_not, Return Null))])
 
 (* More specific arg type Bot *)
 let c3 = Class ( "MF3"
@@ -29,8 +29,8 @@ let c3 = Class ( "MF3"
                    , [ (NoCond, (Method( Bot
                                        , "and"
                                        , [Arg (Bot, "that")])
-                                , Null))
-                     ; (NoCond, (Boolean.m_sig_not, Null))])
+                                , Return Null))
+                     ; (NoCond, (Boolean.m_sig_not, Return Null))])
 
 (* More specific arg type True *)
 let c4 = Class ( "MF4"
@@ -41,8 +41,8 @@ let c4 = Class ( "MF4"
                    , [ (NoCond, (Method( Bot
                                        , "and"
                                        , [Arg (Instance(name_of_class_t Boolean.c_true, empty_varmap), "that")])
-                                , Null))
-                     ; (NoCond, (Boolean.m_sig_not, Null))])
+                                , Return Null))
+                     ; (NoCond, (Boolean.m_sig_not, Return Null))])
 
 let class_c =
   StringMap.add (name_of_class_t c1) (C c1)

@@ -20,16 +20,16 @@ let c_true = Class ( "True"
                    , []
                    , [(NoCond, i_boolean)]
                    , []
-                   , [ (NoCond, (m_sig_and, Null))
-                     ; (NoCond, (m_sig_not, Null))])
+                   , [ (NoCond, (m_sig_and, Return Null))
+                     ; (NoCond, (m_sig_not, Return Null))])
 
 let c_false = Class ( "False"
                     , []
                     , []
                     , [(NoCond, i_boolean)]
                     , []
-                   , [ (NoCond, (m_sig_and, Null))
-                     ; (NoCond, (m_sig_not, Null))])
+                   , [ (NoCond, (m_sig_and, Return Null))
+                     ; (NoCond, (m_sig_not, Return Null))])
 
 (* return a subtype of the declared *)
 let c_true2 = Class ( "True2"
@@ -40,8 +40,8 @@ let c_true2 = Class ( "True2"
                    , [ (NoCond, (Method( Bot
                                        , "and"
                                        , [Arg(Instance("Boolean", empty_varmap), "that")])
-                                , Null))
-                     ; (NoCond, (m_sig_not, Null))])
+                                , Return Null))
+                     ; (NoCond, (m_sig_not, Return Null))])
 
 let c_true3 = Class ( "True3"
                     , []

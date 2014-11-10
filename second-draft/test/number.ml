@@ -20,8 +20,8 @@ let c_integer = Class ("Integer"
                       , []
                       , [(NoCond, i_number)]
                       , []
-                      , [ (NoCond, (m_sig_add, Null))
-                        ; (NoCond, (m_sig_sub, Null))])
+                      , [ (NoCond, (m_sig_add, Return Null))
+                        ; (NoCond, (m_sig_sub, Return Null))])
 
 let class_c =
   StringMap.add (name_of_class_t c_integer) (C c_integer)

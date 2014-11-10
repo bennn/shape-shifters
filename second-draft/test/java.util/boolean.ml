@@ -16,14 +16,14 @@ let i_boolean = Interface ("Boolean", [], [], []
 let c_true = Class ( "True", [], []
                      , [(NoCond, i_boolean)]
                      , []
-                     , [ (NoCond, (m_sig_and, Null))
-                       ; (NoCond, (m_sig_not, Null))])
+                     , [ (NoCond, (m_sig_and, Return Null))
+                       ; (NoCond, (m_sig_not, Return Null))])
 
 let c_false = Class ( "False", [], []
                       , [(NoCond, i_boolean)]
                       , []
-                      , [ (NoCond, (m_sig_and, Null))
-                        ; (NoCond, (m_sig_not, Null))])
+                      , [ (NoCond, (m_sig_and, Return Null))
+                        ; (NoCond, (m_sig_not, Return Null))])
 
 let ctx =
   let cc =

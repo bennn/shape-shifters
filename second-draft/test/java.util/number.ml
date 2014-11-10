@@ -26,19 +26,19 @@ let c_long =
           (NoCond, ( Method( Instance("Integer", empty_varmap)
                           , "intValue"
                           , [])
-                     , Null))
+                     , Return Null))
           ;(NoCond, ( Method( Instance("Long", empty_varmap)
                              , "longValue"
                              , [])
-                    , Null))
+                    , Return Null))
           ;(NoCond, ( Method( Instance("Boolean", empty_varmap)
                             , "leq"
                             , [Arg(TVar "THIS", "that")])
-                    , Null))
+                    , Return Null))
           ;(NoCond, ( Method( Instance("Boolean", empty_varmap)
                             , "equals"
                             , [Arg(TVar "THIS", "that")])
-                    , Null))
+                    , Return Null))
         ])
 
 let c_integer =
@@ -50,7 +50,7 @@ let c_integer =
         , [(NoCond, ( Method( Instance("Long", empty_varmap)
                              , "longValue"
                              , [])
-                    , Null))
+                    , Return Null))
         ])
 
 let () =

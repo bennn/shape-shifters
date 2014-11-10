@@ -255,10 +255,12 @@ let test_sample1 () =
         (StringMap.add (name_of_inter_t Sample1.i_iterable) (I Sample1.i_iterable)
         (StringMap.add (name_of_inter_t Sample1.i_iterator) (I Sample1.i_iterator)
         (StringMap.add (name_of_inter_t Sample1.i_container) (I Sample1.i_container)
+        (StringMap.add (name_of_class_t Boolean.c_true) (C Boolean.c_true)
+        (StringMap.add (name_of_class_t Boolean.c_false) (C Boolean.c_false)
         (StringMap.add (name_of_inter_t Boolean.i_boolean) (I Boolean.i_boolean)
         (StringMap.add (name_of_inter_t Number.i_number) (I Number.i_number)
         (StringMap.add (name_of_class_t Number.c_integer) (C Number.c_integer)
-        StringMap.empty)))))))))))
+        StringMap.empty)))))))))))))
       in
       let sc = StringMap.empty in
       let vm =

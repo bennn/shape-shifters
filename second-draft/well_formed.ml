@@ -48,6 +48,34 @@ and methods_of_shape (ctx:context) (st:shape_t) : MethodSet.t =
   let m_set = MethodSet.of_list (filter_by_condition ctx mthds) in
   MethodSet.union m_set (inherited_methods ctx [] [] sats)
 
+(* [lookup_method ctx ct mname] Search [ct] and its parents for the method with name [mname].
+   First look in your own method set, then call for inherited methods. *)
+let rec lookup_method (ctx:context) (st:sig_t) (mname:string) : method_t option =
+  (* dammit, should be using a string map for methods *)
+  let key = Method(Bot, mname, []) in
+  begin match st with
+  | C (Class(_,_,exts,_,_,mthds)) ->
+     let m_set = MethodSet.of_list (List.map fst (filter_by_condition ctx mthds)) in
+     begin match MethodSet.mem key m_set with
+     | true  -> Some (MethodSet.find key m_set)
+     | false -> let m_inhr = inherited_methods ctx exts [] [] in
+                begin match MethodSet.mem key m_inhr with
+                | true -> Some (MethodSet.find key m_inhr)
+                | false -> None
+                end
+     end
+  | I (Interface(_,_,impls,shps,mthds)) ->
+     let m_set = MethodSet.of_list (filter_by_condition ctx mthds) in
+     begin match MethodSet.mem key m_set with
+     | true  -> Some (MethodSet.find key m_set)
+     | false -> let m_inhr = inherited_methods ctx [] impls shps in
+                begin match MethodSet.mem key m_inhr with
+                | true  -> Some (MethodSet.find key m_inhr)
+                | false -> None
+                end
+     end
+  end
+
 (* param ok, class ok, interface ok, ...... *)
 let rec class_ok (ctx:context) (ct:class_t) : bool =
   let () = if wDEBUG then Format.printf "[class_ok] '%s'\n" (string_of_class_t ct) in
@@ -120,11 +148,33 @@ and methods_implemented (ctx:context) (to_implement:MethodSet.t) (mthds:(cond_t 
                             (MethodSet.of_list mthds') in
   MethodSet.is_empty diff
 (* [method_body_ok ctx (m,b)] Type-check the statement [b], make sure it
-   conforms to the method signature [m]. *)
+   conforms to the method signature [m]. As of (2014-11-09), just make sure
+   the expression type matches the return type. *)
 and method_body_ok (ctx:context) ((mthd,body):method_t * stmt_t) : bool =
   let () = if wDEBUG then Format.printf "[method_body_ok] '%s'\n" (string_of_method_t mthd) in
+  let Method(expected_rtype, _, _) = mthd in
   begin match body with
-  | Null -> true
+  | Return Null -> true
+  | Return (New (cname, vm)) ->
+     let () = if wDEBUG then Format.printf "[method_body_ok.return_new] '%s'\n" cname in
+     let ct = Instance(cname, vm) in
+     (type_ok ctx ct)
+     && (match lookup_class ctx cname with C _ -> true | I _ -> false)
+     && (subtype ctx ct expected_rtype)
+  | Return (Call ((cname, vm), mname, args)) ->
+     let () = if wDEBUG then Format.printf "[method_body_ok.call] '%s.%s'\n" cname mname in
+     let ctx' = context_addvarmap ctx vm in
+     let cls = lookup_class ctx' cname in
+     (type_ok ctx' (Instance(cname, vm)))
+     && (match lookup_method ctx' cls mname with
+         | None -> if wDEBUG then Format.printf "[method_body_ok] method '%s.%s' not found\n" cname mname; false
+         | Some (Method(actual_rtype, _, args')) ->
+            let arg_vals = List.map (fun (a,b) -> Instance(a,b)) args in
+            let arg_sigs = List.map (fun (Arg(a,_)) -> a)        args' in
+            let ctx'' = flip_variance ctx' in
+            (for_all2 (subtype ctx'') arg_sigs arg_vals)
+            && (subtype ctx' actual_rtype expected_rtype))
+  | Return (ExtM (cname, mname, args)) -> failwith "extension method calls not implemented"
   end
 and sig_ok (ctx:context) (st:sig_t) : bool =
   let () = if wDEBUG then Format.printf "[sig_ok] '%s'\n" (string_of_sig_t st) in

@@ -151,35 +151,35 @@ let c_array =
             , (Method( TVar c_array_param
                      , "get"
                      , [Arg(Instance("Integer", empty_varmap), "index")])
-              , Null))
+              , Return Null))
           ; ( NoCond
             , (Method( Bot
                      , "set"
                      , [ Arg(Instance("Integer", empty_varmap), "index")
                        ; Arg(TVar c_array_param               , "elem")])
-              , Null))
+              , Return Null))
           ; ( NoCond
             , (Method( Instance("Integer", empty_varmap)
                      , "length"
                      , [])
-              , Null))
+              , Return Null))
           ; ( NoCond
             , (Method( Instance("Iterator", varmap_addvar empty_varmap i_iterator_param   (Bot, TVar c_array_param))
                      , "getIterator"
                      , [])
-              , Null))
+              , Return Null))
           ; ( SuperSat(c_array_param, s_cloneable)
             , (Method( tSuper
                      , "clone"
                      , [])
-              , Null))
+              , Return Null))
           ; ( SuperSat(c_array_param, s_addable)
             , (Method( tSuper
                      , "plus"
                      , [Arg( Instance("Indexed",
                                       varmap_addvar empty_varmap i_indexed_param (Bot, TVar c_array_param))
                            , "that")])
-              , Null))
+              , Return Null))
         ])
 
 let c_string = Class ( "String"
@@ -192,15 +192,15 @@ let c_string = Class ( "String"
                      , [ (NoCond, (Method( Instance("Boolean", empty_varmap)
                                         , "equals"
                                         , [Arg(Instance("String", empty_varmap), "that")])
-                                  , Null))
+                                  , Return (New("Boolean", empty_varmap))))
                        ; (NoCond, (Method( Instance("String", empty_varmap)
                                         , "clone"
                                         , [])
-                                  , Null))
+                                  , Return Null))
                        ; (NoCond, (Method( Instance("String", empty_varmap)
                                         , "plus"
                                         , [Arg(Instance("String", empty_varmap) , "that")])
-                                  , Null))]
+                                  , Return Null))]
                      )
 
 let class_c =

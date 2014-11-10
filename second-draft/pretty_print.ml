@@ -68,14 +68,21 @@ let pshps (ctx:context) (shps:(cond_t * shape_t) list) : string =
                                         (List.map (pcond ctx (pshape_shallow ctx)) shps))
   end
 
-let pbody (ctx:context) (b:stmt_t) : string =
-  begin match b with
-  | Null -> "return null;"
-  end
-
 let parg (ctx:context) (a:arg_t) : string =
   let Arg(tt, s) = a in
   Format.sprintf "%s %s" (ptype_shallow ctx tt) s
+
+let pbody (ctx:context) (b:stmt_t) : string =
+  begin match b with
+  | Return Null -> "return null;"
+  | Return (New(cname,vm)) -> Format.sprintf "return (new %s);" (ptype_shallow ctx (Instance(cname, vm)))
+  | Return (Call((cname,vm),mname,vals)) ->
+     Format.sprintf "return %s.%s(%s);"
+                    (ptype_shallow ctx (Instance(cname,vm)))
+                    mname
+                    (String.concat ", " (List.map (ptype_shallow ctx) (List.map (fun (a,b) -> Instance(a,b)) vals)))
+  | Return (ExtM (cname,mname,args)) -> "return ERROR:not.implemented();"
+  end
 
 let pmethod_impl (ctx:context) ((m,b):(method_t * stmt_t)) : string =
   let Method(rtype, name, args) = m in
