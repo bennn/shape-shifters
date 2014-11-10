@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = false
+let wDEBUG = true
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -59,7 +59,9 @@ let rec class_ok (ctx:context) (ct:class_t) : bool =
   && (List.for_all (shape_ok ctx)       (filter_by_condition ctx sats))
   && (List.for_all (method_body_ok ctx) (filter_by_condition ctx mthds))
   && (method_sigs_ok ctx (inherited_methods ctx extends impls sats) method_sigs)
-  && (methods_implemented ctx (inherited_methods ctx [] impls sats) method_sigs)
+  && (let to_implement = MethodSet.diff (inherited_methods ctx [] impls sats)
+                                        (inherited_methods ctx extends [] [])
+      in methods_implemented ctx to_implement method_sigs)
 (* [param_ok ctx param] Check that the parameter [param]
    is bound in the current context [ctx]. *)
 and param_ok (ctx:context) (param:string) : bool =
@@ -89,8 +91,10 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
   let no_duplicates = (=) (MethodSet.cardinal (MethodSet.of_list (List.map snd mthds)))
                           (List.length mthds)
   in
+  let () = if wDEBUG && (not no_duplicates) then Format.printf "[method_sigs_ok] NOT OKAY: duplicate method in '%s'\n" (String.concat "; " (List.sort Pervasives.compare (List.map string_of_method_t (List.map snd mthds)))) in
   let ctx' = flip_variance ctx in
   let method_type_ok (m:method_t) =
+    let () = if wDEBUG then Format.printf "[method_sigs_ok.type_ok] '%s'\n" (string_of_method_t m) in
     let Method(ret,_,args) = m in
     (type_ok ctx ret)
     && (List.for_all (fun (Arg(tp,_)) -> type_ok ctx' tp) args)
@@ -105,14 +109,14 @@ and method_sigs_ok (ctx:context) (inherited:MethodSet.t) (mthds:((cond_t * metho
   (* condition fails or method well-formed *)
   && List.for_all (fun m -> (method_type_ok m && method_compliant m))
                   (filter_by_condition ctx mthds)
-(* [methods_implemented ctx sats mthds] Check that each method in [sats] is matched
+(* [methods_implemented ctx todo mthds] Check that each method in [todo] is matched
    by an implementation in [mthds]. *)
-and methods_implemented (ctx:context) (sats:MethodSet.t) (mthds:(cond_t * method_t) list) : bool =
+and methods_implemented (ctx:context) (to_implement:MethodSet.t) (mthds:(cond_t * method_t) list) : bool =
   let mthds' = filter_by_condition ctx mthds in
   let () = if wDEBUG then Format.printf "[methods_implemented] comparing '%s' with '%s'\n"
-                                        (String.concat "; " (MethodSet.fold (fun x acc -> string_of_method_t x :: acc) sats []))
+                                        (String.concat "; " (MethodSet.fold (fun x acc -> string_of_method_t x :: acc) to_implement []))
                                         (String.concat "; " (List.map string_of_method_t mthds')) in
-  let diff = MethodSet.diff sats
+  let diff = MethodSet.diff to_implement
                             (MethodSet.of_list mthds') in
   MethodSet.is_empty diff
 (* [method_body_ok ctx (m,b)] Type-check the statement [b], make sure it

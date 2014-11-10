@@ -244,6 +244,40 @@ let test_sample1 () =
     let () = test (not (same_method_names Sample1.ctx0 (Instance("Array", vm6)) (Instance("Array", vm3)))) in
     ()
   in
+  let () = (* Print all sample1 classes/interfaces *)
+    let ctx =
+      let cc =
+        (StringMap.add (name_of_class_t Sample1.c_string) (C Sample1.c_string)
+        (StringMap.add (name_of_class_t Sample1.c_array) (C Sample1.c_array)
+        (StringMap.add (name_of_inter_t Sample1.i_set) (I Sample1.i_set)
+        (StringMap.add (name_of_inter_t Sample1.i_list) (I Sample1.i_list)
+        (StringMap.add (name_of_inter_t Sample1.i_indexed) (I Sample1.i_indexed)
+        (StringMap.add (name_of_inter_t Sample1.i_iterable) (I Sample1.i_iterable)
+        (StringMap.add (name_of_inter_t Sample1.i_iterator) (I Sample1.i_iterator)
+        (StringMap.add (name_of_inter_t Sample1.i_container) (I Sample1.i_container)
+        (StringMap.add (name_of_inter_t Boolean.i_boolean) (I Boolean.i_boolean)
+        (StringMap.add (name_of_inter_t Number.i_number) (I Number.i_number)
+        (StringMap.add (name_of_class_t Number.c_integer) (C Number.c_integer)
+        StringMap.empty)))))))))))
+      in
+      let sc = StringMap.empty in
+      let vm =
+        let vm1 = varmap_addvar empty_varmap Sample1.i_container_param (Top, Top) in
+        let vm2 = varmap_addvar vm1          Sample1.i_iterator_param  (Top, Top) in
+        let vm3 = varmap_addvar vm2          Sample1.i_iterable_param  (Top, Top) in
+        let vm4 = varmap_addvar vm3          Sample1.i_indexed_param   (Top, Top) in
+        let vm5 = varmap_addvar vm4          Sample1.i_list_param      (Top, Top) in
+        let vm6 = varmap_addvar vm5          Sample1.i_set_param       (Top, Top) in
+        let vm7 = varmap_addvar vm6          Sample1.c_array_param     (Top, Top) in
+        vm7
+      in
+      context_init cc sc vm
+    in
+    let () = List.iter (fun s -> Format.printf "%s\n" (Pretty_print.pshape_t ctx s)) Sample1.shapes in
+    let () = List.iter (fun i -> Format.printf "%s\n" (Pretty_print.pinter_t ctx i)) Sample1.interfaces in
+    let () = List.iter (fun c -> Format.printf "%s\n" (Pretty_print.pclass_t ctx c)) Sample1.classes in
+    ()
+  in
   ()
 
 (*** RUN TESTS ***)
@@ -253,7 +287,6 @@ let () =
     (* test_boolean (); *)
     (* test_mf_boolean (); *)
     (* test_number (); *)
-    (* test_sample1 (); *)
-    Java.test_collections ();
+    test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---\n"
   end

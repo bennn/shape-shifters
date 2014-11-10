@@ -11,7 +11,8 @@ let rec ptype_shallow (ctx:context) (tt:type_t) : string =
        | I (Interface(_,params,_,_,_)) -> params
        end
      in
-     let param_strs = List.map (fun p -> ptype_shallow ctx (lookup_tau_o ctx p)) params in
+     let ctx' = context_addvarmap ctx vm in
+     let param_strs = List.map (fun p -> ptype_shallow ctx (lookup_tau_o ctx' p)) params in
      Format.sprintf "%s<%s>" s (String.concat ", " param_strs)
   | Top -> "Top"
   | Bot -> "Bot"
@@ -78,18 +79,20 @@ let parg (ctx:context) (a:arg_t) : string =
 
 let pmethod_impl (ctx:context) ((m,b):(method_t * stmt_t)) : string =
   let Method(rtype, name, args) = m in
+  let ctx' = flip_variance ctx in
   Format.sprintf "%s %s (%s) {\n    %s\n  }"
                  (ptype_shallow ctx rtype)
                  name
-                 (String.concat ", " (List.map (parg ctx) args))
+                 (String.concat ", " (List.map (parg ctx') args))
                  (pbody ctx b)
 
 let pmethod_sig (ctx:context) (m:method_t) : string =
   let Method(rtype, name, args) = m in
+  let ctx' = flip_variance ctx in
   Format.sprintf "%s %s (%s);"
                  (ptype_shallow ctx rtype)
                  name
-                 (String.concat ", " (List.map (parg ctx) args))
+                 (String.concat ", " (List.map (parg ctx') args))
 
 let pmethod_impls (ctx:context) (mthds:(cond_t * (method_t * stmt_t)) list) : string =
   String.concat "\n" (List.map (fun m -> "  " ^ pcond ctx (pmethod_impl ctx) m) mthds)
