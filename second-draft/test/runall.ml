@@ -40,6 +40,7 @@ let test_sample1 () =
                test (interface_ok Sample1.inter_ctx x)) Sample1.interfaces
   in
   let () = test (class_ok Sample1.c_array_ctx Sample1.c_array) in
+  let () = failwith "FUCK" in
   let () = test (class_ok Sample1.c_string_ctx Sample1.c_string) in
   let () = print_subhdr "iContainer" in
   let () = (* container top <: container bot && container bot </: container top *)
@@ -287,8 +288,8 @@ let () =
   begin
     test_object ();
     test_boolean ();
-    test_mf_boolean ();
-    test_number ();
+    (* test_mf_boolean (); *)
+    (* test_number (); *)
     test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---\n"
   end

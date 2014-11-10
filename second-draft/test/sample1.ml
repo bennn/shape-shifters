@@ -83,7 +83,7 @@ let i_list_vm =
   let vm2 = varmap_addvar vm1          i_container_param (TVar i_list_param, Top) in
   vm2
 let i_list =
-  (* Varmap for List<super E> *)
+  (* Varmap for List<super E> *) (* TODO uhh, replacing with empty is... fine?... *)
   let super_vm = varmap_addvar i_list_vm i_list_param (Bot, Super(i_list_param)) in
   let tSuper = Instance("List", super_vm) in
   Interface ( "List"
@@ -157,29 +157,38 @@ let c_array =
                      , "set"
                      , [ Arg(Instance("Integer", empty_varmap), "index")
                        ; Arg(TVar c_array_param               , "elem")])
-              , Return Null))
+              , Return Null
+            ))
           ; ( NoCond
             , (Method( Instance("Integer", empty_varmap)
                      , "length"
                      , [])
-              , Return Null))
+              , Return (New("Integer", empty_varmap)) ))
           ; ( NoCond
             , (Method( Instance("Iterator", varmap_addvar empty_varmap i_iterator_param   (Bot, TVar c_array_param))
                      , "getIterator"
                      , [])
-              , Return Null))
-          ; ( SuperSat(c_array_param, s_cloneable)
-            , (Method( tSuper
-                     , "clone"
-                     , [])
-              , Return Null))
-          ; ( SuperSat(c_array_param, s_addable)
-            , (Method( tSuper
-                     , "plus"
-                     , [Arg( Instance("Indexed",
-                                      varmap_addvar empty_varmap i_indexed_param (Bot, TVar c_array_param))
-                           , "that")])
-              , Return Null))
+              , Return Null)) (* eh, not sure what to put, to make an iterator *)
+          (* ; ( SuperSat(c_array_param, s_cloneable) *)
+          (*   , (Method( tSuper *)
+          (*            , "clone2" *)
+          (*            , []) *)
+          (*     , Return Null (\* (Call(("Array", empty_varmap), "clone", [])) *\) *)
+          (*   )) *)
+          (* ; ( SuperSat(c_array_param, s_equatable) *)
+          (*   , (Method( Instance("Boolean", empty_varmap) *)
+          (*            , "equals" *)
+          (*            , [Arg(Top, "that")]) *)
+          (*            (\* , [Arg(tSuper, "that")]) *\) *)
+          (*     , Return Null *)
+          (*   )) *)
+          (* ; ( SuperSat(c_array_param, s_addable) *)
+          (*   , (Method( tSuper *)
+          (*            , "plus" *)
+          (*            , [Arg( Instance("Indexed", *)
+          (*                             varmap_addvar empty_varmap i_indexed_param (Bot, TVar c_array_param)) *)
+          (*                  , "that")]) *)
+          (*     , Return Null)) *)
         ])
 
 let c_string = Class ( "String"
@@ -192,15 +201,20 @@ let c_string = Class ( "String"
                      , [ (NoCond, (Method( Instance("Boolean", empty_varmap)
                                         , "equals"
                                         , [Arg(Instance("String", empty_varmap), "that")])
-                                  , Return (New("Boolean", empty_varmap))))
+                                  , Return (New("False", empty_varmap))))
                        ; (NoCond, (Method( Instance("String", empty_varmap)
                                         , "clone"
                                         , [])
-                                  , Return Null))
+                                  , Return
+                                      (Call(("String", empty_varmap), "plus", [("String", empty_varmap)]))
+                                      (* (New ("Array", add_vars empty_varmap [(i_list_param, (Bot, Bot))] )) *)
+                                      (* (New("String", empty_varmap)) *)
+                         ))
                        ; (NoCond, (Method( Instance("String", empty_varmap)
                                         , "plus"
                                         , [Arg(Instance("String", empty_varmap) , "that")])
-                                  , Return Null))]
+                                  , Return (Call(("String", empty_varmap), "plus", [("String", empty_varmap)]))
+                       ))]
                      )
 
 let class_c =
@@ -232,15 +246,17 @@ let inter_ctx =
                inter_varmap
 
 let c_array_vm =
-  let vm1 = varmap_addvar empty_varmap i_iterator_param  (Bot, TVar c_array_param) in
-  let vm2 = varmap_addvar vm1          i_indexed_param   (Bot, TVar c_array_param) in
-  let vm3 = varmap_addvar vm2          i_list_param      (Bot, TVar c_array_param) in
-  let vm4 = varmap_addvar vm3          i_iterable_param  (Bot, TVar c_array_param) in
-  vm4
+  let vm1 = varmap_addvar empty_varmap i_iterator_param   (Bot, TVar c_array_param) in
+  let vm2 = varmap_addvar vm1          i_indexed_param    (Bot, TVar c_array_param) in
+  let vm3 = varmap_addvar vm2          i_list_param       (Bot, TVar c_array_param) in
+  let vm4 = varmap_addvar vm3          i_iterable_param   (Bot, TVar c_array_param) in
+  let vm5 = varmap_addvar vm4          i_container_param  (TVar c_array_param, Top) in
+  vm5
 let c_array_ctx =
   context_init class_c
                StringMap.empty
-               (varmap_addvar c_array_vm c_array_param (Top, Top))
+               (add_vars c_array_vm [(c_array_param, (Bot, Bot))
+                                    ])
 
 let c_string_vm =
   let vm1 = varmap_addvar empty_varmap "THIS" (Bot, (Instance("String", empty_varmap))) in
