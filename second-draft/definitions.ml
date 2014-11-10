@@ -1,3 +1,9 @@
+type type_t   = TVar of string
+              | Super of string
+              | Instance of val_t
+              | Top | Bot
+(* VALUE = class/interface name + typevars *)
+and  val_t    = string * (string -> (type_t * type_t))
 (* ARG = type , name *)
 type arg_t    = Arg of type_t * string
 (* CONDITION = TVAR satisfies SHAPE | super TVAR satisfies SHAPE | NOTHING *)
@@ -7,10 +13,6 @@ and  shape_t  = Shape of string * ((cond_t * shape_t) list) * ((cond_t * method_
 (* METHOD = return_type , name , args *)
 and  method_t = Method of type_t * string * (arg_t list)
 (* TYPE = variable , instantiation, or the special TOP/BOT *)
-and  type_t   = TVar of string
-              | Super of string
-              | Instance of string * (string -> (type_t * type_t))
-              | Top | Bot
 
 (* the inter/class don't need to be recursive, could use strings. I don't think it matters *)
 (* INTERFACE = name , params, extends, satisfies, methods *)
@@ -19,8 +21,6 @@ type inter_t    = Interface of string
                              * ((cond_t * inter_t) list)
                              * ((cond_t * shape_t) list)
                              * ((cond_t * method_t) list)
-(* VALUE = class/interface name + typevars *)
-type val_t    = string * (string -> (type_t * type_t))
 type expr_t   = Null
               | New  of val_t
               | Call of val_t * string * (val_t list) (* object, method name, args *)
@@ -48,11 +48,8 @@ let string_of_cond_t (ct:cond_t) : string =
   begin match ct with
   | Sat (var, shape) -> Format.sprintf "[[%s SATISFIES %s]]" var (string_of_shape_t shape)
   | SuperSat (var, shape) -> Format.sprintf "[[SUPER %s SATISFIES %s]]" var (string_of_shape_t shape)
-  | NoCond -> "[[nil]]"
+  | NoCond -> "[[true]]"
   end
-let string_of_method_t (md:method_t) : string =
-  let Method (_, name, _) = md in
-  name
 let string_of_type_t (tt:type_t) : string =
   begin match tt with
   | TVar v -> Format.sprintf "TVar(%s)" v
@@ -61,6 +58,9 @@ let string_of_type_t (tt:type_t) : string =
   | Bot -> "Bottom"
   | Top -> "Top"
   end
+let string_of_method_t (md:method_t) : string =
+  let Method (rtype, name, _) = md in
+  Format.sprintf "%s %s()" (string_of_type_t rtype) name
 let string_of_inter_t (st:inter_t) : string =
   let Interface (name, _, _, _, _) = st in
   name
