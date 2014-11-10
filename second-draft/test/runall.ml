@@ -283,10 +283,10 @@ let test_sample1 () =
 (*** RUN TESTS ***)
 let () =
   begin
-    (* test_object (); *)
-    (* test_boolean (); *)
-    (* test_mf_boolean (); *)
-    (* test_number (); *)
+    test_object ();
+    test_boolean ();
+    test_mf_boolean ();
+    test_number ();
     test_sample1 ();
     Format.printf "--- ALL TESTS PASS ---\n"
   end

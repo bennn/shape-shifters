@@ -1,7 +1,6 @@
 .PHONY: test
 
-all:
-	ocamlc definitions.ml subtype.ml well_formed.ml
+all: test java scala
 
 java:
 	ocamlbuild test/java.util/run_java.d.byte
