@@ -1,18 +1,26 @@
+(* TYPE = variable , instantiation, or the special TOP/BOT *)
 type type_t   = TVar of string
               | Super of string
               | Instance of val_t
               | Top | Bot
 (* VALUE = class/interface name + typevars *)
-and  val_t    = string * (string -> (type_t * type_t))
+and  val_t        = string * type_context
+and  type_context = (string * type_t * type_t) list
+(** Rep. Invariant: list length <= number of instance parameters *)
+
 (* ARG = type , name *)
 type arg_t    = Arg of type_t * string
-(* CONDITION = TVAR satisfies SHAPE | super TVAR satisfies SHAPE | NOTHING *)
-and  cond_t   = Sat of string * shape_t | SuperSat of string * shape_t | NoCond
-(* SHAPE = name , extends (shapes) , methods *)
-and  shape_t  = Shape of string * ((cond_t * shape_t) list) * ((cond_t * method_t) list)
 (* METHOD = return_type , name , args *)
-and  method_t = Method of type_t * string * (arg_t list)
-(* TYPE = variable , instantiation, or the special TOP/BOT *)
+type method_t = Method of type_t * string * (arg_t list)
+
+(* CONDITION = TVAR satisfies SHAPE | super TVAR satisfies SHAPE | NOTHING *)
+type cond_t   = Sat of string * shape_t
+              | SuperSat of string * shape_t (* TODO idk... *)
+              | NoCond
+(* SHAPE = name , extends (shapes) , methods *)
+and  shape_t  = Shape of string
+                         * ((cond_t * shape_t) list)
+                         * ((cond_t * method_t) list)
 
 (* the inter/class don't need to be recursive, could use strings. I don't think it matters *)
 (* INTERFACE = name , params, extends, satisfies, methods *)
@@ -23,9 +31,10 @@ type inter_t    = Interface of string
                              * ((cond_t * method_t) list)
 type expr_t   = Null
               | New  of val_t
-              | Call of val_t * string * (val_t list) (* object, method name, args *)
+              | Call of val_t  * string * (val_t list) (* object, method name, args *)
               | ExtM of string * string * (val_t list) (* class name, method name, args *)
 type stmt_t   = Return of expr_t (* | If | While | ... *)
+
 (* CLASS = name , params, extends , implements , satisfies , methods+bodies *)
 type class_t  = Class of string
                          * (string list)
@@ -72,63 +81,21 @@ let string_of_sig_t (vt:sig_t) : string =
   | C c -> string_of_class_t c
   | I i -> string_of_inter_t i
   end
+
 let name_of_shape_t (st:shape_t) : string =
-  string_of_shape_t st
-let name_of_class_t (ct:class_t) : string =
-  string_of_class_t ct
+  let Shape (name, _, _) = st in
+  name
 let name_of_inter_t (it:inter_t) : string =
-  string_of_inter_t it
+  let Interface (name, _, _, _, _) = it in
+  name
+let name_of_class_t (ct:class_t) : string =
+  let Class (name, _, _, _, _, _) = ct in
+  name
 let name_of_sig_t (vt:sig_t) : string =
-  string_of_sig_t vt
+  begin match vt with
+  | C c -> string_of_class_t c
+  | I i -> string_of_inter_t i
+  end
 
-(* Tables *)
-module StringMap   = Map.Make (String)
-type class_context = sig_t StringMap.t
-type shape_context = shape_t StringMap.t
-
-(* Context = signatures (types), shapes, and type vars *)
-type variance = Pos | Neg
-type context  = class_context
-               * shape_context
-               * (variance * (string -> (type_t * type_t)))
-let context_init (cc:class_context) (sc:shape_context) (varmap:(string -> (type_t * type_t))) =
-  (cc, sc, (Pos, varmap))
-let varmap_addvar vm k v =
-  (fun k' -> if k = k' then v else vm k')
-let rec mem_assoc k kvs =
-  begin match kvs with
-  | [] -> None
-  | (k',v)::_ when k = k' -> Some v
-  | _::tl -> mem_assoc k tl
-  end
-let add_vars vm kvs =
-  (fun k' -> match mem_assoc k' kvs with
-             | Some v -> v
-             | None   -> vm k')
-let context_addvar (ctx:context) (k:string) (v:type_t * type_t) : context =
-  let (cc, sc, (vnc, vm)) = ctx in
-  let vm' = varmap_addvar vm k v in
-  (cc, sc, (vnc, vm'))
-let context_addvarmap (ctx:context) vm =
-  let (cc, sc, (vnc, vm')) = ctx in
-  let vm'' = fun k' -> try vm k' with _ -> vm' k' in
-  (cc, sc, (vnc, vm''))
-let flip_variance (ctx:context) : context =
-  let (cc, sc, (vnc, varmap)) = ctx in
-  let vnc' = match vnc with | Pos -> Neg | Neg -> Pos in
-  (cc, sc, (vnc', varmap))
-let lookup_tau_i (ctx:context) (var:string) : type_t =
-  let (_,_,(vnc, vm)) = ctx in
-  begin match vnc with
-  | Pos -> fst (vm var)
-  | Neg -> snd (vm var)
-  end
-let lookup_tau_o (ctx:context) (var:string) : type_t =
-  let (_,_,(vnc, vm)) = ctx in
-  begin match vnc with
-  | Neg -> fst (vm var)
-  | Pos -> snd (vm var)
-  end
-let lookup_class (ctx:context) (name:string) : sig_t =
-  let (cc,_,_) = ctx in
-  StringMap.find name cc
+let string_of_list (f:'a -> string) (xs:'a list) : string =
+  Format.sprintf "[%s]" (String.concat "; " (List.map f xs))
