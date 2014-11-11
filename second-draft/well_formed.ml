@@ -190,10 +190,8 @@ and method_body_ok (ctx:Context.t) ((mthd,body):method_t * stmt_t) : bool =
                                    (string_of_list string_of_type_t arg_sigs)
                                    (string_of_list string_of_type_t arg_vals)
             in
-            (for_all2 (subtype ctx'') arg_sigs arg_vals)
-            && (let () = Format.printf "WEPA\n" in true)
+            (arg_vals = [] || for_all2 (subtype ctx'') arg_sigs arg_vals) (*TODO *)
             && (subtype ctx' actual_rtype expected_rtype))
-            && (let () = Format.printf "AHSFA UP\n" in true)
   | Return (ExtM (cname, mname, args)) -> failwith "extension method calls not implemented"
   end
 and sig_ok (ctx:Context.t) (st:sig_t) : bool =
@@ -213,7 +211,8 @@ and type_ok (ctx:Context.t) (tt:type_t) : bool =
      let cls = Context.find_sig ctx name in
      let params = params_of_sig_t cls in
      let () = if wDEBUG then Format.printf "[type_ok] checking given args '%s' against spec args '%s'\n" (TypeContext.to_string tc) (string_of_list (fun x -> x) params) in
-     for_all2 (fun (n1,_,_) n2 -> n1 = n2) tc params
+     (tc = []) (*TODO *)
+     || for_all2 (fun (n1,_,_) n2 -> n1 = n2) tc params
   end
 
 let rec method_names (ctx:Context.t) (tt:type_t) : string list =
