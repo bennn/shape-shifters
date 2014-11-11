@@ -37,7 +37,7 @@ let add_vars (ctx:t) (vs:TypeContext.t) : t =
 (* [flip_variance ctx] Reverse the variance of context [ctx]. *)
 let flip_variance (ctx:t) : t =
   let (cc, sc, tc, vr) = ctx in
-  let vr' = match vnc with | Pos -> Neg | Neg -> Pos in
+  let vr' = match vr with | Pos -> Neg | Neg -> Pos in
   (cc, sc, tc, vr')
 
 (* [lookup_tau_i ctx var] Lookup the contravariant type mapped to [var]. *)
