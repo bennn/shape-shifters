@@ -172,12 +172,12 @@ and method_body_ok (ctx:Context.t) ((mthd,body):method_t * stmt_t) : bool =
      let () = if wDEBUG then Format.printf "[method_body_ok.return_new] '%s'\n" cname in
      let ct = Instance(cname, vm) in
      (type_ok ctx ct)
-     && (match Context.find_class ctx cname with C _ -> true | I _ -> false)
+     && (match Context.find_sig ctx cname with C _ -> true | I _ -> false)
      && (subtype ctx ct expected_rtype)
   | Return (Call ((cname, vm), mname, args)) ->
      let () = if wDEBUG then Format.printf "[method_body_ok.call] '%s.%s'\n" cname mname in
      let ctx' = Context.add_vars ctx vm in
-     let cls  = Context.find_class ctx' cname in
+     let cls  = Context.find_sig ctx' cname in
      (type_ok ctx' (Instance(cname, vm)))
      && (match lookup_method ctx' cls mname with
          | None -> if wDEBUG then Format.printf "[method_body_ok] method '%s.%s' not found\n" cname mname; false
@@ -202,7 +202,11 @@ and type_ok (ctx:Context.t) (tt:type_t) : bool =
   begin match tt with
   | Top | Bot -> true
   | TVar v | Super v -> param_ok ctx v
-  | Instance(name, vm) -> ignore (Context.find_class ctx name); true
+  | Instance(name, tc) -> (* Check that num params match *)
+     let cls = Context.find_sig ctx name in
+     let params = params_of_sig_t cls in
+     let () = if wDEBUG then Format.printf "[type_ok] checking given args '%s' against spec args '%s'\n" (TypeContext.to_string tc) (string_of_list (fun x -> x) params) in
+     for_all2 (fun (n1,_,_) n2 -> n1 = n2) tc params
   end
 
 let rec method_names (ctx:Context.t) (tt:type_t) : string list =
@@ -212,12 +216,7 @@ let rec method_names (ctx:Context.t) (tt:type_t) : string list =
   | Bot -> ["Bot=>All"]
   | TVar v | Super v -> method_names ctx (Context.find_tau_o ctx v)
   | Instance(name, vm) ->
-     let ms =
-       begin match Context.find_class ctx name with
-       | C (Class(_,_,_,_,_,ms)) -> List.map (fun (a,(b,c)) -> (a,b)) ms
-       | I (Interface(_,_,_,_,ms)) -> ms
-       end
-     in
+     let ms = method_sigs_of_sig_t (Context.find_sig ctx name) in
      let ctx' = Context.add_vars ctx vm in
      List.map string_of_method_t (filter_by_condition ctx' ms)
   end

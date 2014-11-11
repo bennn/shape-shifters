@@ -6,7 +6,7 @@ let rec string_of_type_t_shallow (ctx:Context.t) (tt:type_t) : string =
   | Super s -> "super " ^ s
   | Instance(s, tc) ->
      let params =
-       begin match Context.find_class ctx s with
+       begin match Context.find_sig ctx s with
        | C (Class(_,params,_,_,_,_))   -> params
        | I (Interface(_,params,_,_,_)) -> params
        end

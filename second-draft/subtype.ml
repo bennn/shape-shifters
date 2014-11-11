@@ -22,7 +22,7 @@ and satisfies (ctx:Context.t) (tt:type_t) (shp:shape_t) : bool =
   | Super var -> satisfies ctx (Context.find_tau_o ctx var) shp
   | Instance (name, tc') ->
      let shapes =
-       begin match Context.find_class ctx name with
+       begin match Context.find_sig ctx name with
        | C (Class (_,_,_,_,shps,_)) -> shps
        | I (Interface (_,_,_,shps,_)) -> shps
        end
@@ -66,7 +66,7 @@ let rec inherits (ctx:Context.t) (t1:type_t) (t2:type_t) : sig_t option =
   | Instance (name1, _) , Instance (name2, _) when name1 = name2 -> None
   | Instance (name1, tc1) , Instance (name2, _)        ->
      let parent_sigs =
-       begin match Context.find_class ctx name1 with
+       begin match Context.find_sig ctx name1 with
        | C (Class (_, _, exts, iexts, _, _))  ->
           let ext_parents = List.map (fun (p,c) -> (p, C c)) exts
           and inh_parents = List.map (fun (p,i) -> (p, I i)) iexts in
@@ -98,7 +98,7 @@ let rec inherits (ctx:Context.t) (t1:type_t) (t2:type_t) : sig_t option =
 let inherits_eq (ctx:Context.t) (t1:type_t) (t2:type_t) : sig_t option =
   let () = if sDEBUG then Format.printf "[inherits_eq] '%s' <::= '%s'\n" (string_of_type_t t1) (string_of_type_t t2) in
   begin match t1, t2 with
-  | Instance (name1, _), Instance (name2, _) when name1 = name2 -> Some (Context.find_class ctx name1)
+  | Instance (name1, _), Instance (name2, _) when name1 = name2 -> Some (Context.find_sig ctx name1)
   | Instance _, Instance _ -> inherits ctx t1 t2
   | _ -> None (* because this function is guarded by subtype *)
   end
@@ -127,12 +127,7 @@ let rec subtype (ctx:Context.t) (t1:type_t) (t2:type_t) : bool =
      | None -> let () = if sDEBUG then Format.printf "[subtype] <:: failed\n" in
                false
      | Some inhr_sig ->
-        let tvars =
-          begin match inhr_sig with
-          | C (Class (_,tvs,_,_,_,_)) -> tvs
-          | I (Interface (_,tvs,_,_,_)) -> tvs
-          end
-        in
+        let tvars = params_of_sig_t inhr_sig in
         let ctx1 = Context.add_vars ctx tc1 in (* TODO scared *)
         let ctx2 = Context.add_vars ctx tc2 in
         List.fold_left
@@ -146,15 +141,8 @@ let rec subtype (ctx:Context.t) (t1:type_t) (t2:type_t) : bool =
      end
   end
 
-(* [for_all2 f xs ys] Assert that the lists [xs] and [ys] have the same length,
-   and also that [f x y] holds for each pair [x,y] in [zip xs ys].
-   This function is declared HERE because I don't use it elsewhere. *)
-let rec for_all2 (f:'a -> 'b -> bool) (xs:'a list) (ys:'b list) : bool =
-  begin match xs , ys with
-  | [] , []         -> true
-  | h1::t1 , h2::t2 -> f h1 h2 && for_all2 f t1 t2
-  | _ , _           -> false
-  end
+(* [subtype_method ctx m1 m2] True if method [m1] is a subtype of method [m2]
+   in context [ctx]. *)
 let rec subtype_method (ctx:Context.t) (m1:method_t) (m2:method_t) : bool =
   let () = if sDEBUG then Format.printf "[subtype_method] '%s' <: '%s'\n" (string_of_method_t m1) (string_of_method_t m2) in
   let Method (ret1, _, args1) = m1 in

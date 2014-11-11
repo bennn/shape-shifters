@@ -50,8 +50,8 @@ let find_tau_o (ctx:t) (var:string) : type_t =
   let (_,_,tc,_) = ctx in
   TypeContext.find_tau_o tc var
 
-(* [find_class ctx name] Lookup the class with name [name] in context [ctx]. *)
-let find_class (ctx:t) (name:string) : sig_t =
+(* [find_sig ctx name] Lookup the class/interface with name [name] in context [ctx]. *)
+let find_sig (ctx:t) (name:string) : sig_t =
   let (cc,_,_,_) = ctx in
   ClassContext.find cc name
 

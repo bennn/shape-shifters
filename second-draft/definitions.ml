@@ -99,3 +99,31 @@ let name_of_sig_t (vt:sig_t) : string =
 
 let string_of_list (f:'a -> string) (xs:'a list) : string =
   Format.sprintf "[%s]" (String.concat "; " (List.map f xs))
+
+(* little helpers *)
+
+(* [params_of_sig_t st] Return the type parameter list attached
+   to class/interface [st]. *)
+let params_of_sig_t (st:sig_t) : string list =
+  begin match st with
+  | C (Class (_,tvs,_,_,_,_)) -> tvs
+  | I (Interface (_,tvs,_,_,_)) -> tvs
+  end
+
+(* [method_sigs_of_sig_t st] Return the method signatures (and conditions) attached
+   to class/interface [st]. *)
+let method_sigs_of_sig_t (st:sig_t) : (cond_t * method_t) list =
+  begin match st with
+  | C (Class(_,_,_,_,_,ms))   -> List.map (fun (cond,(m_sig, _)) -> (cond, m_sig)) ms
+  | I (Interface(_,_,_,_,ms)) -> ms
+  end
+
+(* [for_all2 f xs ys] Assert that the lists [xs] and [ys] have the same length,
+   and also that [f x y] holds for each pair [x,y] in [zip xs ys].
+   This function is declared HERE because I don't use it elsewhere. *)
+let rec for_all2 (f:'a -> 'b -> bool) (xs:'a list) (ys:'b list) : bool =
+  begin match xs , ys with
+  | [] , []         -> true
+  | h1::t1 , h2::t2 -> f h1 h2 && for_all2 f t1 t2
+  | _ , _           -> false
+  end
