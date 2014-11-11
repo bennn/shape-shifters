@@ -4,8 +4,8 @@ open Test_utils
 
 let i_number =
   Interface ( "Number"
-            , []
-            , []
+            , [] (* type parameters *)
+            , [] (* extends interfaces *)
             , [ (NoCond, Comparable.s_comparable)
               ; (NoCond, Addable.s_addable)]
             , [ (NoCond, Method( Instance("Number", [])

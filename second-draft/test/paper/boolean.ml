@@ -3,7 +3,10 @@ open Well_formed
 open Test_utils
 
 let i_boolean =
-  Interface ("Boolean", [], [], []
+  Interface ("Boolean"
+            , [] (* type parameters *)
+            , [] (* extends interfaces *)
+            , [] (* satisfies shapes *)
              , [ (NoCond, Method( Instance("Boolean", [])
                                 , "and"
                                 , [Arg(Instance("Boolean", []), "that")]))
