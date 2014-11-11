@@ -7,7 +7,7 @@ let assert_true = function
 
 let assert_false = function
   | false -> ()
-  | true  -> failwith "ERROR: test failed"
+  | true  -> failwith "WHOOPS: test did not fail, but should have"
 
 let typecheck (ctx:Context.t) (st:sig_t) : unit =
   begin match st with

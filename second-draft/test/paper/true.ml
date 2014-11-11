@@ -135,6 +135,66 @@ let c_malformed11 = (* 'and' arg renamed *)
                           , Return Null))
         ])
 
+let c_malformed12 = (* Too many params in return type *)
+  Class ("MF12", [], [], [(NoCond, Boolean.i_boolean)], []
+             , [ (NoCond, (Method( Instance("Boolean", [("ANY", Top, Top); ("NONE", Bot, Top)])
+                                , "and"
+                                , [Arg(Instance("Boolean", []), "that")])
+                          , Return Null))
+               ; (NoCond, (Method( Instance("Boolean", [])
+                                , "not"
+                                , [])
+                          , Return Null))
+        ])
+
+let c_malformed13 = (* Too many params in arg type *)
+  Class ("MF13", [], [], [(NoCond, Boolean.i_boolean)], []
+             , [ (NoCond, (Method( Instance("Boolean", [])
+                                , "and"
+                                , [Arg(Instance("Boolean", [("ANY", Top, Top)]), "that")])
+                          , Return Null))
+               ; (NoCond, (Method( Instance("Boolean", [])
+                                , "not"
+                                , [])
+                          , Return Null))
+        ])
+
+let c_malformed14 = (* Too many params in new type *)
+  Class ("MF14", [], [], [(NoCond, Boolean.i_boolean)], []
+             , [ (NoCond, (Method( Instance("Boolean", [])
+                                , "and"
+                                , [Arg(Instance("Boolean", []), "that")])
+                          , Return (New("True", [("Ops", Top, Top)])) ))
+               ; (NoCond, (Method( Instance("Boolean", [])
+                                , "not"
+                                , [])
+                          , Return Null))
+        ])
+
+let c_malformed15 = (* trying to instantiate a New interface *)
+  Class ("MF15", [], [], [(NoCond, Boolean.i_boolean)], []
+             , [ (NoCond, (Method( Instance("Boolean", [])
+                                , "and"
+                                , [Arg(Instance("Boolean", []), "that")])
+                          , Return (New("Boolean", [])) ))
+               ; (NoCond, (Method( Instance("Boolean", [])
+                                , "not"
+                                , [])
+                          , Return Null))
+        ])
+
+let c_malformed16 = (* Too many params in call type *)
+  Class ("MF16", [], [], [(NoCond, Boolean.i_boolean)], []
+             , [ (NoCond, (Method( Instance("Boolean", [])
+                                , "and"
+                                , [Arg(Instance("Boolean", [("ANY", Top, Top)]), "that")])
+                          , Return (Call(("True", [("Yo", Bot, Bot)]), "not", [])) ))
+               ; (NoCond, (Method( Instance("Boolean", [])
+                                , "not"
+                                , [])
+                          , Return Null))
+        ])
+
 let c_true_outline = (* Methods implemented with "null" *)
   Class ("TrueOutline", [], [], [(NoCond, Boolean.i_boolean)], []
              , [ (NoCond, (Method( Instance("Boolean", [])
@@ -199,7 +259,7 @@ let c_false =
 let test_malformed () =
   let malformed = [ C c_malformed1; C c_malformed2; C c_malformed3; C c_malformed4
                   ; C c_malformed5; C c_malformed6; C c_malformed7; C c_malformed8
-                  ; C c_malformed9; C c_malformed10; C c_malformed11] in
+                  ; C c_malformed9; C c_malformed10; C c_malformed11; C c_malformed12] in
   let ctx =
     let cc = ClassContext.of_list (I Boolean.i_boolean :: C c_true :: malformed) in
     let tc = TypeContext.of_list [("DUMMY_VAR", Top, Top)] in
