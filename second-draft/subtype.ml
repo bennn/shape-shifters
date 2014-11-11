@@ -1,6 +1,6 @@
 open Definitions
 
-let sDEBUG = false
+let sDEBUG = true
 
 (* [condition_ok ctx cond] Check if the 'satisfies' condition [cond] holds
    in context [ctx]. *)

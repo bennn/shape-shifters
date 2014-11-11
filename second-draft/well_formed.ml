@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = false
+let wDEBUG = true
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -186,8 +186,14 @@ and method_body_ok (ctx:Context.t) ((mthd,body):method_t * stmt_t) : bool =
             let arg_vals = List.map (fun (a,b) -> Instance(a,b)) args in
             let arg_sigs = List.map (fun (Arg(a,_)) -> a)        args' in
             let ctx'' = Context.flip_variance ctx' in
+            let () = Format.printf "TURNIGN UP on arg sigs '%s' AND arg vals '%s'\n"
+                                   (string_of_list string_of_type_t arg_sigs)
+                                   (string_of_list string_of_type_t arg_vals)
+            in
             (for_all2 (subtype ctx'') arg_sigs arg_vals)
+            && (let () = Format.printf "WEPA\n" in true)
             && (subtype ctx' actual_rtype expected_rtype))
+            && (let () = Format.printf "AHSFA UP\n" in true)
   | Return (ExtM (cname, mname, args)) -> failwith "extension method calls not implemented"
   end
 and sig_ok (ctx:Context.t) (st:sig_t) : bool =

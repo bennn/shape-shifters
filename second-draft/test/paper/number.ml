@@ -12,10 +12,10 @@ let i_number =
                                , "max3"
                                , [ Arg(Instance("Number", []), "num1")
                                  ; Arg(Instance("Number", []), "num2")]))
-              ; (NoCond, Method( Instance("Number", [])
+              ; (NoCond, Method( Instance("Integer", [])
                                , "intValue"
                                , []))
-              ; (NoCond, Method( Instance("Number", [])
+              ; (NoCond, Method( Instance("Long", [])
                                , "longValue"
                                , []))
               ; (NoCond, Method( Instance("Boolean", [])
