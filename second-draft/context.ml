@@ -55,6 +55,27 @@ let find_class (ctx:t) (name:string) : sig_t =
   let (cc,_,_,_) = ctx in
   ClassContext.find cc name
 
+(* [is_bound ctx name] Check if the variable [name] is bound in the current
+   type context. *)
+let is_bound (ctx:t) (var:string) : bool =
+  let (_,_,tc,_) = ctx in
+  begin match TypeContext.find_opt tc var with
+  | Some _ -> true
+  | None   -> false
+  end
+
+(* [set_this_sig_t ctx st] Set the special "THIS" variable to point to the sig [st].  *)
+let set_this_sig_t (ctx:t) (st:sig_t) : t =
+  let name       = name_of_sig_t st in
+  let (_,_,tc,_) = ctx in
+  let inst       = Instance(name, tc) in
+  add_var ctx "THIS" (inst, inst)
+
+(* [set_this_shape_t ctx st] Set the special "THIS" variable
+   to point to the shape [st] (sort of.. it's auto-bound).  *)
+let set_this_shape_t (ctx:t) (st:shape_t) : t =
+  add_var ctx "THIS" (Bot, Bot)
+
 let string_of_variance (vr:variance) : string =
   begin match vr with
   | Pos -> "Positive"

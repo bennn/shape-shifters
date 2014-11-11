@@ -162,3 +162,9 @@ let string_of_class_t (ctx:Context.t) (ct:class_t) : string =
                  (string_of_implements   ctx impls)
                  (string_of_shapes       ctx shps)
                  (string_of_method_impls ctx mthds)
+
+let string_of_sig_t (ctx:Context.t) (st:sig_t) : string =
+  begin match st with
+  | C c -> string_of_class_t ctx c
+  | I i -> string_of_interface_t ctx i
+  end

@@ -29,6 +29,9 @@ let find_tau_o (tc:t) (k:string) : type_t =
   | None           -> failwith (Format.sprintf "Unbound variable '%s'" k)
   end
 
+let of_list (xs:Definitions.type_context) : t =
+  xs
+
 let print_triple ((k,v1,v2):(string*type_t*type_t)) : string =
   Format.sprintf ".%s -> (%s,%s)." k (string_of_type_t v1) (string_of_type_t v2)
 
