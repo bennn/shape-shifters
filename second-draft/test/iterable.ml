@@ -41,6 +41,24 @@ let test_shape_not_satisfied (ctx:Context.t) =
                               ~observed:(Instance("Iterable", [])) in
   ()
 
+(* Experiment with 'super T', be sure the method accepts any supertype of the param *)
+let test_super_t (cc:ClassContext.t) =
+  let ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, Instance("Long",[]));
+                                                      (param,          Bot, Instance("Long",[]))]) in
+  (* A few valid instantiations of 'super T'. These are U ::> Long *)
+  let () = check_expr ctx ~expected:(Instance("Boolean", []))
+                      ~observed:(Call(("Iterable", []), "contains", [("Long", [])] )) in
+  let () = check_expr ctx ~expected:(Instance("Boolean", []))
+                      ~observed:(Call(("Iterable", []), "contains", [("Number", [])] )) in
+  (* Check invalid instantiations, U :://> Long *)
+  let () = check_expr_false ctx ~expected:(Instance("Boolean", []))
+                      ~observed:(Call(("Iterable", []), "contains", [("Integer", [])] )) in
+  let () = check_expr_false ctx ~expected:(Instance("Boolean", []))
+                      ~observed:(Call(("Iterable", []), "contains", [("Iterable", [])] )) in
+  let () = check_expr_false ctx ~expected:(Instance("Boolean", []))
+                      ~observed:(Call(("Iterable", []), "contains", [("Boolean", [])] )) in
+  ()
+
 (* Create a few contexts for instantiations, check the methods available to each *)
 let () =
   let cc = ClassContext.of_list [I Number.i_integer; I Number.i_number;
@@ -62,5 +80,6 @@ let () =
   ] in
   let () = List.iter test_shape_satisfied ctx_sats in
   let () = List.iter test_shape_not_satisfied ctx_unsats in
+  let () = test_super_t cc in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t (List.hd ctx_unsats) (I i_iterable)) in
   ()
