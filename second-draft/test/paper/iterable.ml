@@ -31,4 +31,7 @@ let () =
   in
   let () = typecheck ctx (I i_iterable) in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_iterable)) in
+  (* TODO test when shape is/isn't satisfied, does contains exist *)
+  (* TODO test super T on contains *)
+  (* TODO test calls to contains *)
   ()
