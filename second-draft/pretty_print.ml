@@ -168,3 +168,11 @@ let string_of_sig_t (ctx:Context.t) (st:sig_t) : string =
   | C c -> string_of_class_t ctx c
   | I i -> string_of_interface_t ctx i
   end
+
+
+let string_of_shifter_t (ctx:Context.t) (wr:shifter_t) : string =
+  let Shifter(name, params, shapes) = wr in
+  Format.sprintf "shifter %s<%s>\n    shifts %s\n"
+                 name
+                 (String.concat ", " params)
+                 (string_of_list (string_of_shape_t_shallow ctx) shapes)

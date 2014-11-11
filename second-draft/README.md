@@ -1,2 +1,3 @@
-Trying again, let's see if we can't simplify.
-Still going with OCaml for the types, but considering python.
+- No parameterized shapes
+- Variance not enforced, it's all manual
+- Don't distinguish inherited/not inherited shapes

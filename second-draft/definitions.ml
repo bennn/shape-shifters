@@ -21,6 +21,10 @@ type cond_t   = Sat of string * shape_t
 and  shape_t  = Shape of string
                          * ((cond_t * shape_t) list)
                          * ((cond_t * method_t) list)
+(* SHIFTER = name, params, shapes_it_provides *)
+type shifter_t = Shifter of string
+                            * (string list)
+                            * (shape_t list)
 
 (* the inter/class don't need to be recursive, could use strings. I don't think it matters *)
 (* INTERFACE = name , params, extends, satisfies, methods *)
@@ -87,6 +91,9 @@ let name_of_method_t (md:method_t) : string =
   name
 let name_of_shape_t (st:shape_t) : string =
   let Shape (name, _, _) = st in
+  name
+let name_of_shifter_t (sf:shifter_t) : string =
+  let Shifter(name, _, _) = sf in
   name
 let name_of_inter_t (it:inter_t) : string =
   let Interface (name, _, _, _, _) = it in

@@ -2,14 +2,14 @@ open Definitions
 
 type variance = Pos | Neg
 type t = ClassContext.t
-         * ShapeContext.t
+         * ShifterContext.t
          * TypeContext.t
          * variance
 
 (* [init cc sc tc] Initialize a type context from various parts.
    (The parts are all lists for convenience of syntax.) *)
 let init (cc:ClassContext.t)
-         (sc:ShapeContext.t)
+         (sc:ShifterContext.t)
          (tc:TypeContext.t) =
   (cc, sc, tc, Pos)
 
@@ -86,6 +86,6 @@ let to_string (ctx:t) : string =
   let (cc, sc, tc, vr) = ctx in
   Format.sprintf "@@@@@@@@@@\nCLASSES = %s\nSHAPES = %s\nVARS = %s\nvariance = %s\n}}@@@@@@@@@@"
                  (ClassContext.to_string cc)
-                 (ShapeContext.to_string sc)
+                 (ShifterContext.to_string sc)
                  (TypeContext.to_string  tc)
                  (string_of_variance     vr)
