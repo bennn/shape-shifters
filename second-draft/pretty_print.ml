@@ -139,14 +139,14 @@ let string_of_method_sigs (ctx:Context.t) (mthds:(cond_t * method_t) list) : str
 
 let string_of_shape_t (ctx:Context.t) (st:shape_t) : string =
   let Shape(name,shps,mthds) = st in
-  Format.sprintf "shape %s%s {\n%s\n}\n"
+  Format.sprintf "shape %s%s\n{\n%s\n}\n"
                  name
                  (string_of_shapes      ctx shps)
                  (string_of_method_sigs ctx mthds)
 
 let string_of_interface_t (ctx:Context.t) (it:inter_t) : string =
   let Interface(name,params,impls,shps,mthds) = it in
-  Format.sprintf "interface %s<%s>%s%s {\n%s\n}\n"
+  Format.sprintf "interface %s<%s>%s%s\n{\n%s\n}\n"
                  name
                  (String.concat ", " params)
                  (string_of_implements  ctx impls)
@@ -155,7 +155,7 @@ let string_of_interface_t (ctx:Context.t) (it:inter_t) : string =
 
 let string_of_class_t (ctx:Context.t) (ct:class_t) : string =
   let Class(name,params,exts,impls,shps,mthds) = ct in
-  Format.sprintf "class %s<%s>%s%s%s {\n%s\n}\n"
+  Format.sprintf "class %s<%s>%s%s%s\n{\n%s\n}\n"
                  name
                  (String.concat ", " params)
                  (string_of_extends      ctx exts)
