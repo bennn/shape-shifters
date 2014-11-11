@@ -59,7 +59,6 @@ let test_super_t (cc:ClassContext.t) =
                       ~observed:(Call(("Iterable", []), "contains", [("Boolean", [])] )) in
   ()
 
-(* Create a few contexts for instantiations, check the methods available to each *)
 let () =
   let cc = ClassContext.of_list [I Number.i_integer; I Number.i_number;
                                  I Number.i_long; I Iterator.i_iterator;
