@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = false
+let wDEBUG = true
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -180,12 +180,14 @@ and method_body_ok (ctx:Context.t) ((mthd,body):method_t * stmt_t) : bool =
      let ctx' = Context.add_vars ctx vm in
      let cls  = Context.find_sig ctx' cname in
      (type_ok ctx' (Instance(cname, vm)))
+     && (if wDEBUG then Format.printf "[method_body_ok.call] call type OK, checking m type\n"; true)
      && (match lookup_method ctx' cls mname with
          | None -> if wDEBUG then Format.printf "[method_body_ok] method '%s.%s' not found\n" cname mname; false
          | Some (Method(actual_rtype, _, args')) ->
             let arg_vals = List.map (fun (a,b) -> Instance(a,b)) args in
             let arg_sigs = List.map (fun (Arg(a,_)) -> a)        args' in
             let ctx'' = Context.flip_variance ctx' in
+            let () = if wDEBUG then Format.printf "[method_body_ok] subtyping arg sigs '%s' against arg vals '%s'\n" (string_of_list (Pretty_print.string_of_type_t_shallow ctx) arg_sigs) (string_of_list (Pretty_print.string_of_type_t_shallow ctx) arg_vals) in
             (arg_vals = [] (* if empty, no overrides. Nothing to worry about *)
              || for_all2 (subtype ctx'') arg_sigs arg_vals)
             && (subtype ctx' actual_rtype expected_rtype))
@@ -221,5 +223,5 @@ let rec method_names (ctx:Context.t) (tt:type_t) : string list =
   | Instance(name, vm) ->
      let ms = method_sigs_of_sig_t (Context.find_sig ctx name) in
      let ctx' = Context.add_vars ctx vm in
-     List.map string_of_method_t (filter_by_condition ctx' ms)
+     List.map name_of_method_t (filter_by_condition ctx' ms)
   end

@@ -1,6 +1,8 @@
 open Definitions
 open Well_formed
 
+module StringSet = Set.Make (String)
+
 let assert_true = function
   | true  -> ()
   | false -> failwith "ERROR: test failed"
@@ -8,6 +10,26 @@ let assert_true = function
 let assert_false = function
   | false -> ()
   | true  -> failwith "WHOOPS: test did not fail, but should have"
+
+(* [check_expr ctx ~expected ~actual] Typecheck the expression [~actual],
+   make sure the result is a subtype of [~expected]. *)
+let check_expr ctx ~expected:tt ~observed:expr : unit =
+  (* factor through [method_body_ok], as it's the only place we destruct expressions *)
+  let dummy_method = Method(tt, "dummy", []) in
+  let dummy_body   = Return expr in
+  assert_true (method_body_ok ctx (dummy_method,dummy_body))
+
+let check_method_names ctx ~expected:names ~observed:tt : unit =
+  let names' = method_names ctx tt in
+  let exp_set  = StringSet.of_list names in
+  let act_set = StringSet.of_list (method_names ctx tt) in
+  begin match (StringSet.equal exp_set act_set) with
+  | true  -> ()
+  | false -> failwith (Format.sprintf "ERROR: expected names '%s' do not match actual names '%s'. The diff is '%s'."
+                                      (string_of_list (fun x -> x) names)
+                                      (string_of_list (fun x -> x) names')
+                                      (string_of_list (fun x -> x) (StringSet.fold (fun x acc -> x :: acc) (StringSet.diff exp_set act_set) [])))
+  end
 
 let load_class c = ignore c
 

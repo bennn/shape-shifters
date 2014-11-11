@@ -82,6 +82,9 @@ let string_of_sig_t (vt:sig_t) : string =
   | I i -> string_of_inter_t i
   end
 
+let name_of_method_t (md:method_t) : string =
+  let Method (_, name, _) = md in
+  name
 let name_of_shape_t (st:shape_t) : string =
   let Shape (name, _, _) = st in
   name
