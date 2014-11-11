@@ -69,7 +69,7 @@ let string_of_type_t (tt:type_t) : string =
   end
 let string_of_method_t (md:method_t) : string =
   let Method (rtype, name, _) = md in
-  Format.sprintf "%s %s()" (string_of_type_t rtype) name
+  Format.sprintf "%s %s(...)" (string_of_type_t rtype) name
 let string_of_inter_t (st:inter_t) : string =
   let Interface (name, _, _, _, _) = st in
   name

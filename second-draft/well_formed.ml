@@ -140,7 +140,7 @@ and method_sigs_ok (ctx:Context.t) (inherited:MethodSet.t) (mthds:((cond_t * met
   let method_compliant (m:method_t) =
     let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] '%s'\n" (string_of_method_t m) in
     if MethodSet.mem m inherited
-    then let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] is method '%s' a subtype of method '%s'???\n" (string_of_method_t m) (string_of_method_t (MethodSet.find m inherited)) in
+    then let () = if wDEBUG then Format.printf "[method_sigs_ok.compliant] is method '%s' a subtype of method '%s'\n" (string_of_method_t m) (string_of_method_t (MethodSet.find m inherited)) in
          subtype_method ctx m (MethodSet.find m inherited)
     else true
   in
@@ -158,6 +158,7 @@ and methods_implemented (ctx:Context.t) (to_implement:MethodSet.t) (mthds:(cond_
                                         (String.concat "; " (List.map string_of_method_t mthds')) in
   let diff = MethodSet.diff to_implement
                             (MethodSet.of_list mthds') in
+  let () = if wDEBUG then Format.printf "[methods_implemented] the diff is '%s'" (String.concat ", " (List.map string_of_method_t (MethodSet.fold (fun x acc -> x::acc) diff []))) in
   MethodSet.is_empty diff
   && (if wDEBUG then Format.printf "[methods_implemented] OKAY\n"; true)
 (* [method_body_ok ctx (m,b)] Type-check the statement [b], make sure it
