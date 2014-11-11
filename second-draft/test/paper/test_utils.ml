@@ -9,6 +9,8 @@ let assert_false = function
   | false -> ()
   | true  -> failwith "WHOOPS: test did not fail, but should have"
 
+let load_class c = ignore c
+
 let typecheck (ctx:Context.t) (st:sig_t) : unit =
   begin match st with
   | C c -> assert_true (class_ok ctx c)
