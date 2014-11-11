@@ -1,5 +1,5 @@
 
 let () =
   let () = ignore True.c_true in
-  (* let () = ignore Equatable.s_equatable in *)
+  let () = ignore Comparable.s_comparable in
   Format.printf "/* success! */\n"
