@@ -1,3 +1,6 @@
 - No parameterized shapes
 - Variance not enforced, it's all manual
 - Don't distinguish inherited/not inherited shapes
+- Don't typecheck shifter methods, just accept
+- No duplicate methods
+- No duplicate type parameters

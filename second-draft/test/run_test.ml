@@ -6,5 +6,4 @@ let () =
   (* let () = load_class Integer.c_zero in *)
   let () = load_class Ref_equal.c_black_box in
   (* let () = load_class Indexed.i_indexed in *)
-  (* let () = load_class Indexed.i_indexed in *)
   Format.printf "/* success! */\n"

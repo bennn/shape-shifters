@@ -21,13 +21,14 @@ and satisfies (ctx:Context.t) (tt:type_t) (shp:shape_t) : bool =
   | TVar var
   | Super var -> satisfies ctx (Context.find_tau_o ctx var) shp
   | Instance (name, tc') ->
+     let shifted = List.map (fun x -> (NoCond, x)) (Context.find_shifted ctx name) in
      let shapes =
        begin match Context.find_sig ctx name with
        | C (Class (_,_,_,_,shps,_)) -> shps
        | I (Interface (_,_,_,shps,_)) -> shps
        end
-     in
-     shape_satisfies ctx shapes shp
+     in (* 2014-11-11: Leaving context, but possibly want to remove shifters *)
+     shape_satisfies ctx (shifted @ shapes) shp
   end
 (* [shape_satisfies ctx shapes shp] Depth-first search the inheritance hierarchy of
    the list of shapes [shapes] to find any one that satisfies [shp] in context [ctx]. *)

@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = true
+let wDEBUG = false
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -10,6 +10,9 @@ module MethodSet = Set.Make (struct
     let Method (_,n2,_) = m2 in
     Pervasives.compare n1 n2
 end)
+
+let string_of_method_set_t (ms:MethodSet.t) : string =
+  string_of_list name_of_method_t (MethodSet.fold (fun x acc -> x :: acc) ms [])
 
 (* [union_fold f xs] Take the set union of the result of mapping [f] on the
    list [xs]. *)
@@ -50,7 +53,7 @@ and methods_of_shape (ctx:Context.t) (st:shape_t) : MethodSet.t =
   MethodSet.union m_set (inherited_methods ctx [] [] sats)
 
 (* [lookup_method ctx ct mname] Search [ct] and its parents for the method with name [mname].
-   First look in your own method set, then call for inherited methods. *)
+   First look at shifters, next your own method set, then call for inherited methods. *)
 let rec lookup_method (ctx:Context.t) (st:sig_t) (mname:string) : method_t option =
   (* dammit, should be using a string map for methods (instead of making a DUMMY key) *)
   let key = Method(Bot, mname, []) in

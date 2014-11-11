@@ -55,6 +55,15 @@ let find_sig (ctx:t) (name:string) : sig_t =
   let (cc,_,_,_) = ctx in
   ClassContext.find cc name
 
+(* [find_shifted ctx name] Lookup shifters attached to name [name] in context [ctx].
+
+   From these, return the shapes they imply. *)
+let find_shifted (ctx:t) (name:string) : shape_t list =
+  let (_,sc,_,_) = ctx in
+  List.fold_right (fun wr acc -> let Shifter(_,_,shapes) = wr in shapes @ acc)
+                  (ShifterContext.find sc name)
+                  []
+
 (* [is_bound ctx name] Check if the variable [name] is bound in the current
    type context. *)
 let is_bound (ctx:t) (var:string) : bool =
