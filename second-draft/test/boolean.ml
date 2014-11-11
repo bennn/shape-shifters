@@ -1,72 +1,24 @@
 open Definitions
+open Well_formed
 open Test_utils
 
-let m_sig_and = Method( Instance("Boolean", empty_varmap)
-                      , "and"
-                      , [Arg(Instance("Boolean", empty_varmap), "that")])
-let m_sig_not = Method( Instance("Boolean", empty_varmap)
-                      , "not"
-                      , [])
+let i_boolean =
+  Interface ("Boolean"
+            , [] (* type parameters *)
+            , [] (* extends interfaces *)
+            , [] (* satisfies shapes *)
+             , [ (NoCond, Method( Instance("Boolean", [])
+                                , "and"
+                                , [Arg(Instance("Boolean", []), "that")]))
+               ; (NoCond, Method( Instance("Boolean", [])
+                                , "not"
+                                , []))])
 
-let i_boolean = Interface ("Boolean"
-                          , []
-                          , []
-                          , []
-                          , [ (NoCond, m_sig_and)
-                            ; (NoCond, m_sig_not)])
-
-let c_true = Class ( "True"
-                   , []
-                   , []
-                   , [(NoCond, i_boolean)]
-                   , []
-                   , [ (NoCond, (m_sig_and, Return Null))
-                     ; (NoCond, (m_sig_not, Return Null))])
-
-let c_false = Class ( "False"
-                    , []
-                    , []
-                    , [(NoCond, i_boolean)]
-                    , []
-                   , [ (NoCond, (m_sig_and, Return Null))
-                     ; (NoCond, (m_sig_not, Return Null))])
-
-(* return a subtype of the declared *)
-let c_true2 = Class ( "True2"
-                   , []
-                   , []
-                   , [(NoCond, i_boolean)]
-                   , []
-                   , [ (NoCond, (Method( Bot
-                                       , "and"
-                                       , [Arg(Instance("Boolean", empty_varmap), "that")])
-                                , Return Null))
-                     ; (NoCond, (m_sig_not, Return Null))])
-
-let c_true3 = Class ( "True3"
-                    , []
-                    , [(NoCond, c_true)]
-                    , []
-                    , []
-                    , [] )
-
-let class_c =
-  StringMap.add (name_of_inter_t i_boolean) (I i_boolean)
-    (StringMap.add (name_of_class_t c_true) (C c_true)
-      (StringMap.add (name_of_class_t c_false) (C c_false)
-        StringMap.empty))
-let shape_c = StringMap.empty
-let var_c   = empty_varmap
-
-let ctx = context_init class_c shape_c var_c
-
-let interfaces = [
-  i_boolean
-]
-
-let classes = [
-  c_true
-; c_false
-; c_true2
-; c_true3
-]
+let () =
+  let ctx =
+    let cc = ClassContext.of_list [I i_boolean] in
+    Context.init cc [] []
+  in
+  let () = typecheck ctx (I i_boolean) in
+  let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_boolean)) in
+  ()

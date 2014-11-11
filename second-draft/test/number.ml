@@ -1,40 +1,54 @@
 open Definitions
+open Well_formed
 open Test_utils
 
-let m_sig_add = Method( Instance("Number", empty_varmap)
-                      , "add"
-                      , [Arg(Instance("Number", empty_varmap), "that")])
-let m_sig_sub = Method( Instance("Number", empty_varmap)
-                      , "sub"
-                      , [Arg(Instance("Number", empty_varmap), "that")])
-let i_number = Interface ("Number"
-                         , []
-                         , []
-                         , []
-                         , [ (NoCond, m_sig_add)
-                           ; (NoCond, m_sig_sub)
-                           ])
+let i_number =
+  Interface ( "Number"
+            , [] (* type parameters *)
+            , [] (* extends interfaces *)
+            , [ (NoCond, Comparable.s_comparable)
+              ; (NoCond, Addable.s_addable)]
+            , [ (NoCond, Method( Instance("Number", [])
+                               , "max3"
+                               , [ Arg(Instance("Number", []), "num1")
+                                 ; Arg(Instance("Number", []), "num2")]))
+              ; (NoCond, Method( Instance("Integer", [])
+                               , "intValue"
+                               , []))
+              ; (NoCond, Method( Instance("Long", [])
+                               , "longValue"
+                               , []))
+              ; (NoCond, Method( Instance("Boolean", [])
+                               , "isZero"
+                               , []))
+            ])
 
-let c_integer = Class ("Integer"
-                      , []
-                      , []
-                      , [(NoCond, i_number)]
-                      , []
-                      , [ (NoCond, (m_sig_add, Return Null))
-                        ; (NoCond, (m_sig_sub, Return Null))])
+let i_integer =
+  Interface ( "Integer"
+            , []
+            , [ (NoCond, i_number)]
+            , [ (NoCond, Comparable.s_comparable)
+              ; (NoCond, Addable.s_addable)]
+            , [])
 
-let class_c =
-  StringMap.add (name_of_class_t c_integer) (C c_integer)
-  (StringMap.add (name_of_inter_t i_number) (I i_number)
-    StringMap.empty)
-let shape_c = StringMap.empty
-let var_c = empty_varmap
-let ctx = context_init class_c shape_c var_c
+let i_long =
+  Interface ( "Long"
+            , []
+            , [ (NoCond, i_number)]
+            , [ (NoCond, Comparable.s_comparable)
+              ; (NoCond, Addable.s_addable)]
+            , [])
 
-let shapes = [
-]
-let interfaces = [
-]
-let classes = [
-  c_integer
-]
+let () =
+  let ctx =
+    let cc = ClassContext.of_list [I Boolean.i_boolean; I i_number
+                                   ; I i_integer; I i_long] in
+    Context.init cc [] []
+  in
+  let () = typecheck ctx (I i_number) in
+  let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_number)) in
+  let () = typecheck ctx (I i_integer) in
+  let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_integer)) in
+  let () = typecheck ctx (I i_long) in
+  let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_long)) in
+  ()
