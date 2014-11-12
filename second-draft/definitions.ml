@@ -127,6 +127,20 @@ let method_sigs_of_sig_t (st:sig_t) : (cond_t * method_t) list =
   | I (Interface(_,_,_,_,ms)) -> ms
   end
 
+let shapes_of_sig_t (st:sig_t) : (cond_t * shape_t) list =
+  begin match st with
+  | C (Class(_,_,_,_,ss,_)) -> ss
+  | I (Interface(_,_,_,ss,_)) -> ss
+  end
+
+let parent_sigs_of_sig_t (st:sig_t) : (cond_t * sig_t) list =
+  begin match st with
+  | C (Class(_,_,ext,imp,_,_)) -> let ext' = List.map (fun (c,s) -> (c, C s)) ext in
+                                  let imp' = List.map (fun (c,i) -> (c, I i)) imp in
+                                  ext' @ imp'
+  | I (Interface(_,_,imp,_,_)) -> List.map (fun (c,i) -> (c, I i)) imp
+  end
+
 (* [for_all2 f xs ys] Assert that the lists [xs] and [ys] have the same length,
    and also that [f x y] holds for each pair [x,y] in [zip xs ys].
    This function is declared HERE because I don't use it elsewhere. *)
