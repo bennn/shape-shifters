@@ -7,14 +7,15 @@ let i_indexed =
   Interface ( "Indexed"
             , [param]
             , [ (NoCond, Iterable.i_iterable)] (* extends interfaces *)
-            , [ (Sat(param, Equatable.s_equatable), Equatable.s_equatable)
-              ; (Sat(param, Hashable.s_hashable)  , Hashable.s_hashable)] (* satisifies shapes *)
+            , [ (SuperSat(param, Equatable.s_equatable), Equatable.s_equatable)
+              ; (SuperSat(param, Hashable.s_hashable)  , Hashable.s_hashable)] (* satisifies shapes *)
             , [ (NoCond, Method( TVar param
                                , "get"
                                , [Arg(Instance("Integer", []), "index")] ))
               ; (SuperSat(param, Equatable.s_equatable), Method( Instance("Boolean", [])
                                , "equals"
-                               , [Arg (Super param, "value")] ))
+                               , [Arg (Instance("Indexed", [(param, Bot, Super param)])
+                                      , "that")] ))
               ; (SuperSat(param, Hashable.s_hashable), Method( Instance("Integer",[])
                                                                , "hash"
                                                                , [] ))
@@ -25,12 +26,14 @@ let () =
                                  I Number.i_long; I Iterator.i_iterator;
                                  I Boolean.i_boolean; I Iterable.i_iterable;
                                  I i_indexed] in
-  let bot_ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, Bot);
-                                                          (Iterable.param, Bot, Bot);
+  let bot_ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
+                                                          (Iterable.param, Bot, TVar param);
                                                           (param,          Bot, Bot)]) in
-  let top_ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, Top);
-                                                          (Iterable.param, Bot, Top);
+  let top_ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
+                                                          (Iterable.param, Bot, TVar param);
                                                           (param,          Bot, Top)]) in
+  let () = typecheck bot_ctx (I i_indexed) in
+  let () = typecheck top_ctx (I i_indexed) in
   (* Test methods *)
   (* Does not inherit from Iterable, but implementing classes will *)
   let () = check_method_names bot_ctx ~expected:["get"; "equals"; "hash"]

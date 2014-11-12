@@ -1,6 +1,6 @@
 open Definitions
 
-let sDEBUG = true
+let sDEBUG = false
 
 (* [condition_ok ctx cond] Check if the 'satisfies' condition [cond] holds
    in context [ctx]. *)
@@ -116,6 +116,7 @@ let rec subtype (ctx:Context.t) (t1:type_t) (t2:type_t) : bool =
   | Super v, _ -> let t1' = Context.find_tau_o ctx v in
                   subtype ctx t1' t2
   | _, Super v -> let t2' = Context.find_tau_o ctx v in
+                  let () = Format.printf "[subtype] lookup super '%s' found '%s'\n" v (string_of_type_t t2') in
                   subtype ctx t1  t2'
   (* Easy cases: bot/top *)
   | Bot, _ -> true

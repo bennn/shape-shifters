@@ -11,7 +11,6 @@ type t = ClassContext.t
 let init (cc:ClassContext.t)
          (sc:ShifterContext.t)
          (tc:TypeContext.t) =
-  let () = Format.printf "CONTEXT INIT with shifters %s\n" (ShifterContext.to_string sc) in
   (cc, sc, tc, Pos)
 
 (* [add_var ctx k v] Add the variable [k] to the current type context,
@@ -61,7 +60,6 @@ let find_sig (ctx:t) (name:string) : sig_t =
    From these, return the shapes they imply. *)
 let find_shifted (ctx:t) (name:string) : shape_t list =
   let (_,sc,_,_) = ctx in
-  let () = Format.printf "FIND SHIFTED %s in context %s\n" name (ShifterContext.to_string sc) in
   List.fold_right (fun wr acc -> let Shifter(_,_,shapes) = wr in shapes @ acc)
                   (ShifterContext.find sc name)
                   []

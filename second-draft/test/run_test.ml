@@ -4,6 +4,9 @@ open Test_utils
 let () =
   (* let () = load_class True.c_true in *)
   (* let () = load_class Integer.c_zero in *)
-  let () = load_class Dummy_clone.c_black_box in
+  (* let () = load_class Ref_equal.w_ref_equal in *)
+  (* let () = load_class Dummy_clone.w_dummy_clone in *)
+
+  let () = load_class My_list.i_my_list in
   (* let () = load_class Indexed.i_indexed in *)
   Format.printf "/* success! */\n"

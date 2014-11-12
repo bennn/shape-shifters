@@ -4,3 +4,4 @@
 - Don't typecheck shifter methods, just accept
 - No duplicate methods
 - No duplicate type parameters
+- super/sup must have same arg names in same positions

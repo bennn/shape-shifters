@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = true
+let wDEBUG = false
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -89,7 +89,6 @@ let rec class_ok (ctx:Context.t) (ct:class_t) : bool =
     let shifted = Context.find_shifted_cond ctx name in
     shifted @ sats
   in
-  let () = Format.printf "SATS ARE %s\n" (string_of_list name_of_shape_t (List.map snd sats)) in
   let ctx = Context.set_this_sig_t ctx (C ct) in
   let method_sigs = List.map (fun (c,(m,b)) -> (c,m)) mthds in
   (List.for_all (param_ok ctx) params)
@@ -220,7 +219,7 @@ and type_ok (ctx:Context.t) (tt:type_t) : bool =
      let params = params_of_sig_t cls in
      let () = if wDEBUG then Format.printf "[type_ok] checking given args '%s' against spec args '%s'\n" (TypeContext.to_string tc) (string_of_list (fun x -> x) params) in
      (tc = []) (* It's okay for local tc to be empty -- no overrides *)
-     || for_all2 (fun (n1,_,_) n2 -> n1 = n2) tc params
+     || (List.length tc = List.length params)
   end
 
 let rec method_names (ctx:Context.t) (tt:type_t) : string list =
