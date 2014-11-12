@@ -7,6 +7,6 @@ let () =
   (* let () = load_class Ref_equal.w_ref_equal in *)
   (* let () = load_class Dummy_clone.w_dummy_clone in *)
 
-  let () = load_class My_list.i_my_list in
+  let () = load_class My_set.i_my_set in
   (* let () = load_class Indexed.i_indexed in *)
   Format.printf "/* success! */\n"
