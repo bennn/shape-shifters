@@ -27,7 +27,7 @@ let c_red_black_tree =
               ; (SuperSat(param, Equatable.s_equatable)
                 , (Method( Instance("Boolean", [])
                          , "equals"
-                         , [Arg(Instance("Container", [(param, Super param, Super param)]), "that")])
+                         , [Arg(Instance("RedBlackTree", [(param, Super param, Super param)]), "that")])
                   , Return Null ))
               ; (SuperSat(param, Cloneable.s_cloneable)
                 , (Method( Instance("RedBlackTree", [(param, Bot, Super param)])
@@ -45,7 +45,6 @@ let test_bot cc =
   let bot_ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (My_set.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
@@ -59,7 +58,6 @@ let test_top cc =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
                                               (My_list.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   let () = typecheck_false top_ctx (C c_red_black_tree) [Sat(param, Comparable.s_comparable)] in
@@ -70,7 +68,7 @@ let () =
     ClassContext.of_list [I Number.i_integer; I Number.i_number;
                           I Number.i_long; I Iterator.i_iterator;
                           I Boolean.i_boolean; I Iterable.i_iterable;
-                          I Indexed.i_indexed; I My_set.i_my_set;
+                          I My_set.i_my_set;
                           I Container.i_container;
                           C c_red_black_tree] in
   let () = test_bot cc in
@@ -80,7 +78,6 @@ let () =
   let ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (My_set.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in

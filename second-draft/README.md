@@ -7,3 +7,4 @@
 - super/sup must have same arg names in same positions
 - everything inherited
 - multiple supers are not identified (ti = Super ,to = Super)
+- no implementations in interfaces

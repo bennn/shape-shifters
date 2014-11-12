@@ -9,7 +9,12 @@ let i_my_set =
             , [ (NoCond, Iterable.i_iterable)
               ; (NoCond, Container.i_container)]
             , [ (NoCond, Equatable.s_equatable)] (* satisifies shapes *)
-            , [])
+            , [
+              (NoCond
+              , Method( Instance("Boolean", []) (* TODO set should have a more specific equals *)
+                       , "equals"
+                       , [Arg(Instance("MySet", []), "that")]))
+])
 
 let () =
   let cc =
@@ -20,21 +25,19 @@ let () =
   let bot_ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
   let () = typecheck bot_ctx (I i_my_set) [] in
-  let () = check_method_names bot_ctx ~expected:[]
+  let () = check_method_names bot_ctx ~expected:["equals"]
                               ~observed:(Instance("MySet", [])) in
   let top_ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   (* Test methods *)
   let () = typecheck top_ctx (I i_my_set) [] in
-  let () = check_method_names top_ctx ~expected:[]
+  let () = check_method_names top_ctx ~expected:["equals"]
                               ~observed:(Instance("MySet", [])) in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t bot_ctx (I i_my_set)) in
   ()

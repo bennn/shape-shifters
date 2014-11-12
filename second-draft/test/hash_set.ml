@@ -24,9 +24,9 @@ let c_hash_set =
                          , [Arg(Super param, "value")])
                   , Return Null ))
               ; (SuperSat(param, Equatable.s_equatable)
-                , (Method( Instance("Boolean", []) (* TODO set should have a more specific equals *)
+                , (Method( Instance("Boolean", [])
                          , "equals"
-                         , [Arg(Instance("Container", [(param, Super param, Super param)]), "that")])
+                         , [Arg(Instance("HashSet", []), "that")])
                   , Return Null ))
               ; (SuperSat(param, Cloneable.s_cloneable)
                 , (Method( Instance("HashSet", [(param, Bot, Super param)])
@@ -39,7 +39,6 @@ let test_bot cc =
   let bot_ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (My_set.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
@@ -53,7 +52,6 @@ let test_top cc =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
                                               (My_list.param, Bot, TVar param);
-                                              (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   let () = typecheck_false top_ctx (C c_hash_set) [Sat(param, Equatable.s_equatable)] in
