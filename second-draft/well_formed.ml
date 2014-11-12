@@ -1,7 +1,7 @@
 open Definitions
 open Subtype
 
-let wDEBUG = false
+let wDEBUG = true
 
 module MethodSet = Set.Make (struct
   type t = method_t
@@ -27,7 +27,7 @@ let rec inherited_methods (ctx:Context.t)
                           (shapes :((cond_t * shape_t)  list)) : MethodSet.t =
   let () = if wDEBUG then Format.printf "[inherited_methods]\n" in
   union_fold (fun x -> x)
-    [(union_fold (methods_of_class ctx) (filter_by_condition ctx classes))
+    [ (union_fold (methods_of_class ctx) (filter_by_condition ctx classes))
     ; (union_fold (methods_of_inter ctx) (filter_by_condition ctx inters))
     ; (union_fold (methods_of_shape ctx) (filter_by_condition ctx shapes))]
 (* [methods_of_class ctx ct] Collect the set of all methods in class [ct]
@@ -53,16 +53,17 @@ and methods_of_shape (ctx:Context.t) (st:shape_t) : MethodSet.t =
   MethodSet.union m_set (inherited_methods ctx [] [] sats)
 
 (* [lookup_method ctx ct mname] Search [ct] and its parents for the method with name [mname].
-   First look at shifters, next your own method set, then call for inherited methods. *)
+   First look at your own method set, then call for inherited methods. *)
 let rec lookup_method (ctx:Context.t) (st:sig_t) (mname:string) : method_t option =
   (* dammit, should be using a string map for methods (instead of making a DUMMY key) *)
   let key = Method(Bot, mname, []) in
   begin match st with
-  | C (Class(_,_,exts,_,_,mthds)) ->
+  | C (Class(cname,_,exts,_,_,mthds)) ->
      let m_set = MethodSet.of_list (List.map fst (filter_by_condition ctx mthds)) in
      begin match MethodSet.mem key m_set with
      | true  -> Some (MethodSet.find key m_set)
-     | false -> let m_inhr = inherited_methods ctx exts [] [] in
+     | false -> let shifted = Context.find_shifted_cond ctx cname in
+                let m_inhr = inherited_methods ctx exts [] shifted in
                 begin match MethodSet.mem key m_inhr with
                 | true  -> Some (MethodSet.find key m_inhr)
                 | false -> None
@@ -84,6 +85,11 @@ let rec lookup_method (ctx:Context.t) (st:sig_t) (mname:string) : method_t optio
 let rec class_ok (ctx:Context.t) (ct:class_t) : bool =
   let () = if wDEBUG then Format.printf "[class_ok] '%s'\n" (string_of_class_t ct) in
   let Class(name, params, extends, impls, sats, mthds) = ct in
+  let sats = (* 2014-11-11: Update satisfied methods to include your shifters *)
+    let shifted = Context.find_shifted_cond ctx name in
+    shifted @ sats
+  in
+  let () = Format.printf "SATS ARE %s\n" (string_of_list name_of_shape_t (List.map snd sats)) in
   let ctx = Context.set_this_sig_t ctx (C ct) in
   let method_sigs = List.map (fun (c,(m,b)) -> (c,m)) mthds in
   (List.for_all (param_ok ctx) params)
