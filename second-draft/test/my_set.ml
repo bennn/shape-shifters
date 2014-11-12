@@ -23,7 +23,7 @@ let () =
                                               (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
-  let () = typecheck bot_ctx (I i_my_set) in
+  let () = typecheck bot_ctx (I i_my_set) [] in
   let () = check_method_names bot_ctx ~expected:[]
                               ~observed:(Instance("MySet", [])) in
   let top_ctx =
@@ -33,7 +33,7 @@ let () =
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   (* Test methods *)
-  let () = typecheck top_ctx (I i_my_set) in
+  let () = typecheck top_ctx (I i_my_set) [] in
   let () = check_method_names top_ctx ~expected:[]
                               ~observed:(Instance("MySet", [])) in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t bot_ctx (I i_my_set)) in

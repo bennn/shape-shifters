@@ -19,6 +19,6 @@ let () =
     let cc = ClassContext.of_list [I i_boolean] in
     Context.init cc [] []
   in
-  let () = typecheck ctx (I i_boolean) in
+  let () = typecheck ctx (I i_boolean) [] in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_boolean)) in
   ()

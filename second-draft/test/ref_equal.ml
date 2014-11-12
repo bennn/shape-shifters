@@ -20,7 +20,7 @@ let c_black_box =
 let () = (* quick test, assert that black box instances do not have a .equals *)
   (* Check well-formed *)
   let ctx = Context.init [C c_black_box] [] [] in
-  let () = typecheck ctx (C c_black_box) in
+  let () = typecheck ctx (C c_black_box) [] in
   (* Assert methods *)
   let () = check_method_names ctx ~expected:["doesNothing"]
                               ~observed:(Instance("BlackBox", [])) in

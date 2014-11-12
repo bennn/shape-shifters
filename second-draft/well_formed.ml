@@ -222,6 +222,11 @@ and type_ok (ctx:Context.t) (tt:type_t) : bool =
      || (List.length tc = List.length params)
   end
 
+(* [context_ok ctx tt] Be sure that all conditions in the list [cs] are
+   true of the context [ctx]. *)
+let context_ok (ctx:Context.t) (constraints:cond_t list) : bool =
+  List.for_all (condition_ok ctx) constraints
+
 let rec method_names (ctx:Context.t) (tt:type_t) : string list =
   let () = if wDEBUG then Format.printf "[method_names] '%s'\n" (string_of_type_t tt) in
   begin match tt with

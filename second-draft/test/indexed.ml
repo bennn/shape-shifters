@@ -32,8 +32,8 @@ let () =
   let top_ctx = Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                                           (Iterable.param, Bot, TVar param);
                                                           (param,          Bot, Top)]) in
-  let () = typecheck bot_ctx (I i_indexed) in
-  let () = typecheck top_ctx (I i_indexed) in
+  let () = typecheck bot_ctx (I i_indexed) [] in
+  let () = typecheck top_ctx (I i_indexed) [] in
   (* Test methods *)
   (* Does not inherit from Iterable, but implementing classes will *)
   let () = check_method_names bot_ctx ~expected:["get"; "equals"; "hash"]

@@ -1,5 +1,5 @@
 - No parameterized shapes
-- Variance not enforced, it's all manual
+- Variance not enforced, it's all manual (outsde the calss)
 - Don't distinguish inherited/not inherited shapes
 - Don't typecheck shifter methods, just accept
 - No duplicate methods

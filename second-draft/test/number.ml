@@ -45,10 +45,10 @@ let () =
                                    ; I i_integer; I i_long] in
     Context.init cc [] []
   in
-  let () = typecheck ctx (I i_number) in
+  let () = typecheck ctx (I i_number) [] in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_number)) in
-  let () = typecheck ctx (I i_integer) in
+  let () = typecheck ctx (I i_integer) [] in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_integer)) in
-  let () = typecheck ctx (I i_long) in
+  let () = typecheck ctx (I i_long) [] in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_long)) in
   ()

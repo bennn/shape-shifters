@@ -20,6 +20,6 @@ let () =
     let tc = TypeContext.of_list  [(param, Bot, Bot)] in
     Context.init cc [] tc
   in
-  let () = typecheck ctx (I i_container) in
+  let () = typecheck ctx (I i_container) [] in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_container)) in
   ()

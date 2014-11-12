@@ -27,7 +27,7 @@ let w_dummy_clone =
 let () = (* Make Iterable<BlackBox> with and without RefEqual *)
   let empty_ctx = Context.init [C c_black_box] [] [] in
   (* Check well-formed, check methods *)
-  let () = typecheck empty_ctx (C c_black_box) in
+  let () = typecheck empty_ctx (C c_black_box) [] in
   let () = check_method_names empty_ctx ~expected:["doesNothing"]
                               ~observed:(Instance("BlackBox", [])) in
   (* Make sure cloning fails *)

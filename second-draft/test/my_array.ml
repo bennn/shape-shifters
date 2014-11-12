@@ -62,7 +62,7 @@ let test_bot cc =
                                               (My_list.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
-  let () = typecheck bot_ctx (C c_my_array) in
+  let () = typecheck bot_ctx (C c_my_array) [] in
   let () = check_method_names bot_ctx ~expected:["addItem"; "get"; "getIterator"; "getLength"; "contains"; "hash"; "equals"; "clone"; "plus"]
                               ~observed:(Instance("MyArray", [])) in
   ()
@@ -75,7 +75,7 @@ let test_top cc =
                                               (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
-  let () = typecheck top_ctx (C c_my_array) in
+  let () = typecheck top_ctx (C c_my_array) [] in
   let () = check_method_names top_ctx ~expected:["addItem"; "get"; "getIterator"; "getLength"]
                               ~observed:(Instance("MyArray", [])) in
   ()

@@ -29,7 +29,7 @@ let test_bot cc =
                                               (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
-  let () = typecheck bot_ctx (I i_my_list) in
+  let () = typecheck bot_ctx (I i_my_list) [] in
   let () = check_method_names bot_ctx ~expected:["addItem"; "clone"; "plus"]
                               ~observed:(Instance("MyList", [])) in
   ()
@@ -42,7 +42,7 @@ let test_top cc =
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   (* Test methods *)
-  let () = typecheck top_ctx (I i_my_list) in
+  let () = typecheck top_ctx (I i_my_list) [] in
   let () = check_method_names top_ctx ~expected:["addItem"]
                               ~observed:(Instance("MyList", [])) in
   ()
@@ -56,7 +56,7 @@ let test_long cc =
                                         (Container.param, TVar param, Bot);
                                         (param,          Bot, Instance("Long", []))])
   in
-  let () = typecheck long_ctx (I i_my_list) in
+  let () = typecheck long_ctx (I i_my_list) [] in
   let () = check_method_names long_ctx ~expected:["addItem"; "plus"]
                               ~observed:(Instance("MyList", [])) in
   (* Bad calls *)
@@ -84,7 +84,7 @@ let test_boolean cc =
                                         (Container.param, TVar param, Bot);
                                         (param,          Bot, Instance("Boolean", []))])
   in
-  let () = typecheck boolean_ctx (I i_my_list) in
+  let () = typecheck boolean_ctx (I i_my_list) [] in
   let () = check_method_names boolean_ctx ~expected:["addItem"; "clone"]
                               ~observed:(Instance("MyList", [])) in
   ()

@@ -22,7 +22,7 @@ let i_iterable =
 
 (* reusable tests *)
 let test_shape_satisfied (ctx:Context.t) =
-  let () = typecheck ctx (I i_iterable) in
+  let () = typecheck ctx (I i_iterable) [] in
   let () = check_expr ctx ~expected:(Instance("Iterator", []))
                       ~observed:(Call(("Iterable", []), "getIterator", [])) in
   let () = check_expr ctx ~expected:(Instance("Integer", []))
@@ -32,7 +32,7 @@ let test_shape_satisfied (ctx:Context.t) =
   ()
 
 let test_shape_not_satisfied (ctx:Context.t) =
-  let () = typecheck ctx (I i_iterable) in
+  let () = typecheck ctx (I i_iterable) [] in
   let () = check_expr ctx ~expected:(Instance("Iterator", []))
                       ~observed:(Call(("Iterable", []), "getIterator", [])) in
   let () = check_expr ctx ~expected:(Instance("Integer", []))
