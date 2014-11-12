@@ -1,4 +1,10 @@
-Typechecker
-===
-
-Very simple typechecker for conditional inheritance
+- No parameterized shapes
+- Variance not enforced, it's all manual (outsde the calss)
+- Don't distinguish inherited/not inherited shapes
+- Don't typecheck shifter methods, just accept
+- No duplicate methods
+- No duplicate type parameters
+- super/sup must have same arg names in same positions
+- everything inherited
+- multiple supers are not identified (ti = Super ,to = Super)
+- no implementations in interfaces
