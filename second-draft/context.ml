@@ -27,6 +27,7 @@ let add_contravariant_var (ctx:t) (k:string) (v:type_t) : t =
 (* [add_covariant_var ctx k v] Add the variable [k] to the current
    type context in a covariant (positive) position. *)
 let add_covariant_var (ctx:t) (k:string) (v:type_t) : t =
+  let () = Format.printf "asdddin CO var %s -> %s\n" k (string_of_type_t v) in
   add_var ctx k (Bot, v)
 
 (* [add_vars ctx vs] Add all bindings in [vs] to the current context,
@@ -72,13 +73,10 @@ let find_shifted_cond (ctx:t) (name:string) : (cond_t * shape_t) list =
 let merge (c1:t) (c2:t) =
   let (cc1,sc1,tc1,vr1) = c1 in
   let (cc2,sc2,tc2,vr2) = c1 in
-  begin match vr1 <> vr2 with
-  | true -> ( ClassContext.merge cc1 cc2
-            , ShifterContext.merge sc1 sc2
-            , TypeContext.merge tc1 tc2
-            , vr1)
-  | false -> failwith "cannot merge contexts with opposite variance"
-  end
+  ( ClassContext.merge cc1 cc2
+  , ShifterContext.merge sc1 sc2
+  , TypeContext.merge tc1 tc2
+  , vr1)
 
 (* [is_bound ctx name] Check if the variable [name] is bound in the current
    type context. *)
