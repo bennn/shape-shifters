@@ -5,3 +5,5 @@
 - No duplicate methods
 - No duplicate type parameters
 - super/sup must have same arg names in same positions
+- everything inherited
+- multiple supers are not identified (ti = Super ,to = Super)
