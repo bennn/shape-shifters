@@ -5,3 +5,7 @@
 *.out
 _build
 *.d.byte
+
+old-test
+java
+scala
