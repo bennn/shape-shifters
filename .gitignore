@@ -9,3 +9,5 @@ _build
 old-test
 java
 scala
+
+test/generated-code.txt

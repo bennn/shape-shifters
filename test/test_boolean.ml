@@ -265,21 +265,22 @@ let test_malformed () =
     let tc = TypeContext.of_list [("DUMMY_VAR", Top, Top)] in
     Context.init cc [] tc
   in
-  List.iter (typecheck_false ctx) malformed
+  List.iter (fun m -> typecheck_false ctx m []) malformed
 
 let test_true_outline () =
   let ctx =
     let cc = ClassContext.of_list [ I Boolean.i_boolean
                                   ; C c_true_outline] in
     Context.init cc [] []
-  in typecheck ctx (C c_true_outline)
+  in
+  typecheck ctx (C c_true_outline) []
 
 let test_true_args () =
   let ctx =
     let cc = ClassContext.of_list [ I Boolean.i_boolean
                                   ; C c_true_args] in
     Context.init cc [] []
-  in typecheck ctx (C c_true_args)
+  in typecheck ctx (C c_true_args) []
 
 let test_true_ret () =
   let ctx =
@@ -287,7 +288,7 @@ let test_true_ret () =
                                   ; C c_true
                                   ; C c_true_ret] in
     Context.init cc [] []
-  in typecheck ctx (C c_true_ret)
+  in typecheck ctx (C c_true_ret) []
 
 let test_true_false () =
   let ctx =
@@ -297,13 +298,15 @@ let test_true_false () =
     in
     Context.init cc [] []
   in
-  let () = typecheck ctx (C c_true)  in
-  let () = typecheck ctx (C c_false) in
+  let () = typecheck ctx (C c_true) []  in
+  let () = typecheck ctx (C c_false) [] in
   ()
 
 (* Main *)
 let () =
+  let () = Format.printf "/* [test_boolean] testing malformed classes ... */\n" in
   let () = test_malformed () in
+  let () = Format.printf "/* [test_boolean] testing well-formed classes ... */\n" in
   let () = test_true_outline () in
   let () = test_true_args () in
   let () = test_true_ret () in

@@ -36,9 +36,12 @@ let () =
   let () = typecheck top_ctx (I i_indexed) [] in
   (* Test methods *)
   (* Does not inherit from Iterable, but implementing classes will *)
+  let () = Format.printf "/* [indexed] asserting Indexed<Bot> has shape methods. */\n" in
   let () = check_method_names bot_ctx ~expected:["get"; "equals"; "hash"]
                               ~observed:(Instance("Indexed", [])) in
+  let () = Format.printf "/* [indexed] asserting Indexed<Bot> does not have shape methods. */\n" in
   let () = check_method_names top_ctx ~expected:["get"]
                               ~observed:(Instance("Indexed", [])) in
+  let () = Format.printf "/* [indexed] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t bot_ctx (I i_indexed)) in
   ()

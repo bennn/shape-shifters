@@ -22,6 +22,7 @@ let () = (* quick test, assert that black box instances do not have a .equals *)
   let ctx = Context.init [C c_black_box] [] [] in
   let () = typecheck ctx (C c_black_box) [] in
   (* Assert methods *)
+  let () = Format.printf "/* [shifter_ref_equal] checking default BlackBox methods. */\n" in
   let () = check_method_names ctx ~expected:["doesNothing"]
                               ~observed:(Instance("BlackBox", [])) in
   ()
@@ -42,14 +43,18 @@ let () = (* Make Iterable<BlackBox> with and without RefEqual *)
     , Context.init cc sc tc)
   in
   (* 'contains' present / absent *)
+  let () = Format.printf "/* [shifter_ref_equal] asserting Iterable<BlackBox> does not have 'contains' method. */\n" in
   let () = check_method_names ctx_without ~expected:["getIterator"; "getLength"]
                               ~observed:(Instance("Iterable", [])) in
+  let () = Format.printf "/* [shifter_ref_equal] asserting Iterable<BlackBox with refequal> does have 'contains' method. */\n" in
   let () = check_method_names ctx_with ~expected:["getIterator"; "getLength"; "contains"]
                               ~observed:(Instance("Iterable", [])) in
   (* Try a call *)
+  let () = Format.printf "/* [shifter_ref_equal] checking call to Iterable<BlackBox with refequal>.contains(BlackBox). */\n" in
   let () = check_expr ctx_with ~expected:(Instance("Boolean", []))
                       ~observed:(Call(("Iterable", []), "contains", [("BlackBox", [])]))
   in
   let empty_ctx = Context.init [] [] [] in
+  let () = Format.printf "/* [shifter_ref_equal] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_shifter_t empty_ctx w_ref_equal) in
   ()

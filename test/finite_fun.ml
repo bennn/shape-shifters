@@ -27,6 +27,7 @@ let () =
     in
     Context.init [C c_function] [] tc
   in
+  let () = Format.printf "/* [shifter_finite_fun] checking default Function<A,B> methods */\n" in
   let () = typecheck ctx (C c_function) [] in
   (* Assert methods *)
   let () = check_method_names ctx ~expected:["apply"]
@@ -41,8 +42,8 @@ let w_finite_function =
           )
 
 let () = (* Make Array<BlackBox> with and without RefEqual *)
-  let fun_bot = Instance("Function", [(paramIn, Bot, Bot);
-                                      (paramOut, Bot, Bot)])
+  let fun_bot = Instance("Function", [(paramIn, Instance("Boolean", []), Bot);
+                                      (paramOut, Bot, Instance("Integer", []))])
   in
   let cc = ClassContext.of_list [I Number.i_integer; I Number.i_number;
                           I Number.i_long; I Iterator.i_iterator;
@@ -60,8 +61,12 @@ let () = (* Make Array<BlackBox> with and without RefEqual *)
   let ctx_without = Context.init cc [] tc in
   let ctx_with    = Context.init cc [("Function", w_finite_function)] tc in
   (* 'contains' present / absent *)
+  let () = Format.printf "/* [shifter_finite_fun] asserting Array<Function<Boolean,Integer>> is not equatable. */\n" in
   let () = check_method_names ctx_without ~expected:["addItem"; "get"; "getIterator"; "getLength"]
                               ~observed:(Instance("MyArray", [])) in
+  let () = Format.printf "/* [shifter_finite_fun] asserting Array<Function<Boolean,Integer> with finitefun> is equatable. */\n" in
   let () = check_method_names ctx_with ~expected:["addItem"; "get"; "getIterator"; "getLength"; "contains"; "equals"]
                               ~observed:(Instance("MyArray", [])) in
+  let () = Format.printf "/* [shifter_finite_fun] all tests pass! */\n" in
+  let () = Format.printf "%s\n" (Pretty_print.string_of_shifter_t ctx_with w_finite_function) in
   ()

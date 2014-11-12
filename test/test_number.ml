@@ -330,7 +330,7 @@ let c_one =
 
 
 
-let base_classes = [ I Boolean.i_boolean; C True.c_true; C True.c_false;
+let base_classes = [ I Boolean.i_boolean; C Test_boolean.c_true; C Test_boolean.c_false;
                      I Number.i_number; I Number.i_integer;  I Number.i_long]
 (* Tests *)
 let test_malformed () =
@@ -340,19 +340,20 @@ let test_malformed () =
     let cc = ClassContext.of_list (malformed @ base_classes) in
     Context.init cc [] []
   in
-  List.iter (typecheck_false ctx) malformed
+  List.iter (fun m -> typecheck_false ctx m []) malformed
 
 let test_zero_one () =
   let ctx =
     let cc = ClassContext.of_list (C c_zero :: C c_one :: base_classes) in
     Context.init cc [] []
   in
-  let () = typecheck ctx (C c_zero) in
-  let () = typecheck ctx (C c_one) in
-  let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (C c_one)) in
+  let () = typecheck ctx (C c_zero) [] in
+  let () = typecheck ctx (C c_one) [] in
   ()
 
 let () =
+  let () = Format.printf "/* [test_number] testing malformed classes ... */\n" in
   let () = test_malformed () in
+  let () = Format.printf "/* [test_number] testing well-formed classes ... */\n" in
   let () = test_zero_one  () in
   ()

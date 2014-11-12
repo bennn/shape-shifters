@@ -29,6 +29,8 @@ let test_shape_satisfied (ctx:Context.t) =
                       ~observed:(Call(("Iterable", []), "getLength", [])) in
   let () = check_expr ctx ~expected:(Instance("Boolean", []))
                       ~observed:(Call(("Iterable", []), "contains", [("Number", [])])) in
+  let () = check_method_names ctx ~expected:["getIterator"; "getLength"; "contains"]
+                              ~observed:(Instance("Iterable", [])) in
   ()
 
 let test_shape_not_satisfied (ctx:Context.t) =
@@ -77,8 +79,12 @@ let () =
   ; Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, Instance("Boolean", []));
                                               (param,          Bot, Instance("Boolean", []))])
   ] in
+  let () = Format.printf "/* [iterable] testing Iterable<Bot>, Iterable<Number>, Iterable<Long> has shape methods. */\n" in
   let () = List.iter test_shape_satisfied ctx_sats in
+  let () = Format.printf "/* [iterable] testing Iterable<Boolean>, Iterable<Top> do not have shape methods. */\n" in
   let () = List.iter test_shape_not_satisfied ctx_unsats in
+  let () = Format.printf "/* [iterable] Testing calls involving <super T>. */\n" in
   let () = test_super_t cc in
+  let () = Format.printf "/* [iterable] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t (List.hd ctx_unsats) (I i_iterable)) in
   ()

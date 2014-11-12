@@ -65,9 +65,10 @@ let () =
                           I Indexed.i_indexed; I My_set.i_my_set;
                           I Container.i_container;
                           C c_hash_set] in
+  let () = Format.printf "/* [hash_set] testing HashSet<Bot> has shape methods */\n" in
   let () = test_bot cc in
+  let () = Format.printf "/* [hash_set] testing HashSet<Top> has no shape methods */\n" in
   let () = test_top cc in
-  (* TODO test calls *)
   (* Print *)
   let ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
@@ -76,5 +77,6 @@ let () =
                                               (My_set.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
+  let () = Format.printf "/* [hash_set] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (C c_hash_set)) in
   ()

@@ -87,7 +87,9 @@ let () =
                           I Boolean.i_boolean; I Iterable.i_iterable;
                           I Indexed.i_indexed; I My_list.i_my_list;
                           C c_my_array] in
+  let () = Format.printf "/* [my_array] checking Array<Bot> has shape methods. */\n" in
   let () = test_bot cc in
+  let () = Format.printf "/* [my_array] checking Array<Bot> does not have shape methods. */\n" in
   let () = test_top cc in
   (* TODO test calls *)
   (* Print *)
@@ -98,5 +100,6 @@ let () =
                                               (My_list.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
+  let () = Format.printf "/* [my_array] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (C c_my_array)) in
   ()

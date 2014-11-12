@@ -95,16 +95,20 @@ let () =
                           I Number.i_long; I Iterator.i_iterator;
                           I Boolean.i_boolean; I Iterable.i_iterable;
                           I Indexed.i_indexed; I i_my_list] in
+  let () = Format.printf "/* [my_list] checking List<Bot>. */\n" in
   let () = test_bot cc in
+  let () = Format.printf "/* [my_list] checking List<Top>. */\n" in
   let () = test_top cc in
+  let () = Format.printf "/* [my_list] checking List<Long>. */\n" in
   let () = test_long cc in
+  let () = Format.printf "/* [my_list] checking List<Boolean>. */\n" in
   let () = test_boolean cc in
-  (* let () = check_expr *)
   let ctx =
     Context.init cc [] (TypeContext.of_list  [(Iterator.param, Bot, TVar param);
                                               (Iterable.param, Bot, TVar param);
                                               (Indexed.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
+  let () = Format.printf "/* [my_list] all tests pass! */\n" in
   let () = Format.printf "%s\n" (Pretty_print.string_of_sig_t ctx (I i_my_list)) in
   ()

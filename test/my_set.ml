@@ -27,6 +27,7 @@ let () =
                                               (Iterable.param, Bot, TVar param);
                                               (Container.param, TVar param, Top);
                                               (param,          Bot, Bot)]) in
+  let () = Format.printf "/* [my_set] checking Set<Bot> has shape methods. */\n" in
   let () = typecheck bot_ctx (I i_my_set) [] in
   let () = check_method_names bot_ctx ~expected:["equals"]
                               ~observed:(Instance("MySet", [])) in
@@ -36,6 +37,7 @@ let () =
                                               (Container.param, TVar param, Bot);
                                               (param,          Bot, Top)]) in
   (* Test methods *)
+  let () = Format.printf "/* [my_set] checking Set<Top> does not have shape methods. */\n" in
   let () = typecheck top_ctx (I i_my_set) [] in
   let () = check_method_names top_ctx ~expected:["equals"]
                               ~observed:(Instance("MySet", [])) in

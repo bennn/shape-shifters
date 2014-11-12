@@ -65,7 +65,7 @@ let test_add_array_list () =
        | Some tt -> let ctx' = Context.init cc [] list_tc in
           let () = assert_true (Subtype.subtype ctx' (Instance("MyList", [(My_list.param, Bot, Instance("B", []))])) tt) in
           let () = assert_true (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("B", []))])) ) in
-          let () = Format.printf "/* MyArray<A>:add(MyList<B>) = %s */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
+          let () = Format.printf "/* [test_extensions] the call 'MyArray<A>:add(MyList<B>)' has type '%s' */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
           ()
        end
   in
@@ -83,7 +83,7 @@ let test_add_array_list () =
           let () = assert_true (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Number", []))])) ) in
           let () = assert_false (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Integer", []))]))) in
           let () = assert_false (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Long", []))]))) in
-          let () = Format.printf "/* MyList<Int>:plus(MyArray<Long>) = %s */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
+          let () = Format.printf "/* [test_extensions] the call 'MyList<Int>:plus(MyArray<Long>)' has type '%s' */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
           ()
        end
   in
