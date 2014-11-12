@@ -12,5 +12,6 @@ let () =
   (* let () = load_class Red_black_tree.c_red_black_tree in *)
 
   let () = load_class Test_extensions.class_a in
+  (* let () = load_class Finite_fun.w_finite_fun in *)
 
   Format.printf "/* success! */\n"

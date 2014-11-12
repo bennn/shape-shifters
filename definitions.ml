@@ -141,6 +141,9 @@ let parent_sigs_of_sig_t (st:sig_t) : (cond_t * sig_t) list =
   | I (Interface(_,_,imp,_,_)) -> List.map (fun (c,i) -> (c, I i)) imp
   end
 
+let instance_of_sig_t (st:sig_t) : type_t =
+  Instance(name_of_sig_t st, [])
+
 (* [for_all2 f xs ys] Assert that the lists [xs] and [ys] have the same length,
    and also that [f x y] holds for each pair [x,y] in [zip xs ys].
    This function is declared HERE because I don't use it elsewhere. *)

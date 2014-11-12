@@ -27,7 +27,6 @@ let add_contravariant_var (ctx:t) (k:string) (v:type_t) : t =
 (* [add_covariant_var ctx k v] Add the variable [k] to the current
    type context in a covariant (positive) position. *)
 let add_covariant_var (ctx:t) (k:string) (v:type_t) : t =
-  let () = Format.printf "asdddin CO var %s -> %s\n" k (string_of_type_t v) in
   add_var ctx k (Bot, v)
 
 (* [add_vars ctx vs] Add all bindings in [vs] to the current context,
@@ -112,3 +111,14 @@ let to_string (ctx:t) : string =
                  (ShifterContext.to_string sc)
                  (TypeContext.to_string  tc)
                  (string_of_variance     vr)
+
+(* [apply_subst ctx tt] Replace all type variables within [tt]
+   that are bound by context [ctx]. *)
+let rec apply_subst (ctx:t) (tt:type_t) : type_t =
+  begin match tt with
+  | TVar str
+  | Super str -> apply_subst ctx (find_tau_o ctx str)
+  | Instance (str, tc) -> Instance(str, List.map (fun (s,t1,t2) -> (s,t1,apply_subst ctx t2)) tc)
+  | Bot
+  | Top -> tt
+  end

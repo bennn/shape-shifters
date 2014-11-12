@@ -42,34 +42,52 @@ let test_add_array_list () =
                                  I Number.i_long; I Iterator.i_iterator;
                                  I Boolean.i_boolean; I Iterable.i_iterable;
                                  I Indexed.i_indexed; I My_list.i_my_list;
-                                 C class_a; C class_b;
+                                 C class_a; C class_b; I Container.i_container;
                                  C My_array.c_my_array] in
-  let arrActx =
-    Context.init cc []
-                 (TypeContext.of_list  [(Iterator.param,  Bot, TVar My_array.param);
+  let arr_tc = TypeContext.of_list [(Iterator.param,  Bot, TVar My_array.param);
                                         (Iterable.param,  Bot, TVar My_array.param);
                                         (Indexed.param,   Bot, TVar My_array.param);
                                         (Container.param, TVar My_array.param, Bot);
-                                        (My_list.param,   Bot, TVar My_array.param);
-                                        (My_array.param,  Bot, Instance("A", []))])
-  in
-  let listBctx =
-    Context.init cc []
-                 (TypeContext.of_list  [(Iterator.param,  Bot, TVar My_list.param);
+                                        (My_list.param,   Bot, TVar My_array.param)]
+  and list_tc = TypeContext.of_list [(Iterator.param,  Bot, TVar My_list.param);
                                         (Iterable.param,  Bot, TVar My_list.param);
                                         (Indexed.param,   Bot, TVar My_list.param);
-                                        (Container.param, TVar My_list.param, Bot);
-                                        (My_list.param,  Bot, Instance("B", []))])
+                                        (Container.param, TVar My_list.param, Bot)]
   in
-  let s_opt = call_extension (arrActx, C My_array.c_my_array)
-                         (listBctx, I My_list.i_my_list)
-                         "plus"
+  let () =
+    let arr_ctx = Context.add_var (Context.init cc [] arr_tc) My_array.param (Instance("A", []), Instance("A", [])) in
+    let list_ctx = Context.add_var (Context.init cc [] list_tc) My_list.param (Bot, Instance("B", [])) in
+    let s_opt = call_extension (arr_ctx, C My_array.c_my_array)
+                               (list_ctx, I My_list.i_my_list)
+                               "plus"
+    in begin match s_opt with
+       | None -> failwith "extension method MyArray<A>:(MyList<B>) FAILED"
+       | Some tt -> let ctx' = Context.init cc [] list_tc in
+          let () = assert_true (Subtype.subtype ctx' (Instance("MyList", [(My_list.param, Bot, Instance("B", []))])) tt) in
+          let () = assert_true (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("B", []))])) ) in
+          let () = Format.printf "/* MyArray<A>:add(MyList<B>) = %s */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
+          ()
+       end
   in
-  begin match s_opt with
-  | None -> Format.printf "nothing\n"
-  | Some s -> Format.printf "GOT IT '%s'\n" s
-  end
-
+  (* (\* MyList<Int>:plus(MyArray<Long>) *\) *)
+  let () =
+    let arr_ctx = Context.add_var (Context.init cc [] arr_tc) My_array.param (Instance("A", []), Instance("Long", [])) in
+    let list_ctx = Context.add_var (Context.init cc [] list_tc) My_list.param (Bot, Instance("Integer", [])) in
+    let s_opt = call_extension (list_ctx, I My_list.i_my_list)
+                               (arr_ctx, C My_array.c_my_array)
+                               "plus"
+    in begin match s_opt with
+       | None -> failwith "extension method MyList<Integer>:plus(MyArray<Long>) FAILED"
+       | Some tt -> let ctx' = Context.init cc [] list_tc in
+          let () = assert_true (Subtype.subtype ctx' (Instance("MyList", [(My_list.param, Bot, Instance("Number", []))])) tt) in
+          let () = assert_true (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Number", []))])) ) in
+          let () = assert_false (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Integer", []))]))) in
+          let () = assert_false (Subtype.subtype ctx' tt (Instance("MyList", [(My_list.param, Bot, Instance("Long", []))]))) in
+          let () = Format.printf "/* MyList<Int>:plus(MyArray<Long>) = %s */\n" (Pretty_print.string_of_type_t_shallow ctx' tt) in
+          ()
+       end
+  in
+  ()
 
 let () = (* main *)
   let () = test_ab_well_formed () in
