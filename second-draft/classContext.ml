@@ -4,6 +4,8 @@ type t = sig_t list
 
 let empty = []
 
+let merge = (@)
+
 (* [of_list xs] Initialize a class context from the list of signatures [xs]. *)
 let of_list (xs:sig_t list) =
   (* TODO raise exception if any duplicates *)

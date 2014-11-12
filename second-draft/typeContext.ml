@@ -2,6 +2,8 @@ open Definitions
 
 type t = Definitions.type_context
 
+let merge = (@)
+
 (* [add_var tc k v] Map the variable [k] to the value [v] in type context [tc].
    Overwrite old binding. *)
 let add_var (tc:t) (k:string) ((v1,v2):type_t*type_t) : t =

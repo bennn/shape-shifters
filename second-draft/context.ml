@@ -69,8 +69,16 @@ let find_shifted (ctx:t) (name:string) : shape_t list =
 let find_shifted_cond (ctx:t) (name:string) : (cond_t * shape_t) list =
   List.map (fun x -> (NoCond, x)) (find_shifted ctx name)
 
-let merge (c1:Context.t) (c2:Context.t) =
-  failwith "NOPE"
+let merge (c1:t) (c2:t) =
+  let (cc1,sc1,tc1,vr1) = c1 in
+  let (cc2,sc2,tc2,vr2) = c1 in
+  begin match vr1 <> vr2 with
+  | true -> ( ClassContext.merge cc1 cc2
+            , ShifterContext.merge sc1 sc2
+            , TypeContext.merge tc1 tc2
+            , vr1)
+  | false -> failwith "cannot merge contexts with opposite variance"
+  end
 
 (* [is_bound ctx name] Check if the variable [name] is bound in the current
    type context. *)

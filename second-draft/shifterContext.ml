@@ -7,6 +7,8 @@ type t = (string * shifter_t) list
 
 let empty = []
 
+let merge = (@)
+
 (* [of_list xs] Initialize a shifter context from the list of shifters [xs]. *)
 let of_list (xs:(string * shifter_t) list) =
   (* TODO raise exception if any duplicates *)

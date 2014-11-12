@@ -11,6 +11,6 @@ let () =
   (* let () = load_class Hash_set.c_hash_set in *)
   (* let () = load_class Red_black_tree.c_red_black_tree in *)
 
-  let () = load_class Extension_methods.class_a in
+  let () = load_class Test_extensions.class_a in
 
   Format.printf "/* success! */\n"

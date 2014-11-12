@@ -1,6 +1,6 @@
 .PHONY: test
 
-all: test java scala paper
+all: test
 
 test:
 	ocamlbuild  test/run_test.d.byte
