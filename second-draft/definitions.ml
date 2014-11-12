@@ -36,7 +36,6 @@ type inter_t    = Interface of string
 type expr_t   = Null
               | New  of val_t
               | Call of val_t  * string * (val_t list) (* object, method name, args *)
-              | ExtM of string * string * (val_t list) (* class name, method name, args *)
 type stmt_t   = Return of expr_t (* | If | While | ... *)
 
 (* CLASS = name , params, extends , implements , satisfies , methods+bodies *)

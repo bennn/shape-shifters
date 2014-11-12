@@ -18,6 +18,7 @@ let check_expr ctx ~expected:tt ~observed:expr : unit =
   let dummy_method = Method(tt, "dummy", []) in
   let dummy_body   = Return expr in
   assert_true (method_body_ok ctx (dummy_method,dummy_body))
+
 (* [check_expr_false ctx ~expected ~observed] Opposite result as [check_expr ctx ~exp ~obs] *)
 let check_expr_false ctx ~expected:tt ~observed:expr : unit =
   (* factor through [method_body_ok], as it's the only place we destruct expressions *)

@@ -69,6 +69,9 @@ let find_shifted (ctx:t) (name:string) : shape_t list =
 let find_shifted_cond (ctx:t) (name:string) : (cond_t * shape_t) list =
   List.map (fun x -> (NoCond, x)) (find_shifted ctx name)
 
+let merge (c1:Context.t) (c2:Context.t) =
+  failwith "NOPE"
+
 (* [is_bound ctx name] Check if the variable [name] is bound in the current
    type context. *)
 let is_bound (ctx:t) (var:string) : bool =

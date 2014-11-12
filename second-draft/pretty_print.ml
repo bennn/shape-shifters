@@ -101,8 +101,6 @@ let string_of_stmt_t (ctx:Context.t) (b:stmt_t) : string =
                                    (List.map (string_of_type_t_shallow ctx)
                                              (List.map (fun (a,b) -> Instance(a,b))
                                                        vals)))
-  | Return (ExtM (cname,mname,args)) ->
-     "return ERROR:not.implemented();"
   end
 
 let string_of_method_impl (ctx:Context.t) ((m,b):(method_t * stmt_t)) : string =

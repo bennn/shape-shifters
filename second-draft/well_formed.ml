@@ -199,7 +199,6 @@ and method_body_ok (ctx:Context.t) ((mthd,body):method_t * stmt_t) : bool =
             (arg_vals = [] (* if empty, no overrides. Nothing to worry about *)
              || for_all2 (subtype ctx'') arg_sigs arg_vals)
             && (subtype ctx' actual_rtype expected_rtype))
-  | Return (ExtM (cname, mname, args)) -> failwith "extension method calls not implemented"
   end
 and sig_ok (ctx:Context.t) (st:sig_t) : bool =
   let () = if wDEBUG then Format.printf "[sig_ok] '%s'\n" (string_of_sig_t st) in
