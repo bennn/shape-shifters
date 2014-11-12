@@ -47,8 +47,11 @@ let typecheck (ctx:Context.t) (st:sig_t) (cs:cond_t list) : unit =
   end
 
 let typecheck_false (ctx:Context.t) (st:sig_t) (cs:cond_t list) : unit =
-  let () = assert_true (context_ok ctx cs) in
-  begin match st with
-  | C c -> assert_false (class_ok ctx c)
-  | I i -> assert_false (interface_ok ctx i)
+  begin match (context_ok ctx cs) with
+  | true ->
+     begin match st with
+     | C c -> assert_false (class_ok ctx c)
+     | I i -> assert_false (interface_ok ctx i)
+     end
+  | false -> ()
   end
